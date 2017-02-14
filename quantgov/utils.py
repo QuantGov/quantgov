@@ -1,5 +1,6 @@
 # TODO: Docstrings
 import concurrent.futures
+import os
 
 _POOLS = {
     'thread': concurrent.futures.ThreadPoolExecutor,
@@ -7,8 +8,26 @@ _POOLS = {
 }
 
 
-def lazy_parallel(func, *iterables, max_workers=None, worker='thread'):
-    # TODO #DOCSTRING
+def lazy_parallel(func, *iterables, **kwargs):
+    """
+    Parallel execution without fully loading iterables
+
+
+    Arguments:
+    * func: function to call
+    * iterables: any number of iterables, which will be passed to func as
+      arguments
+
+    Keyword Arugments:
+    * max_workers: max number of threads or processes. Defaults to None.
+    * worker: 'thread' (default) or 'process'
+    """
+    worker = kwargs.get('worker', 'thread')
+    max_workers = kwargs.get('max_workers')
+    if max_workers is None:  # Not in back-port
+        max_workers = (os.cpu_count() or 1)
+        if worker == 'thread':
+            max_workers *= 5
     try:
         pooltype = _POOLS[worker]
     except KeyError:
