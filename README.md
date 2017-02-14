@@ -1,2 +1,0 @@
-# quantgov
-The QuantGov Library
