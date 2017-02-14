@@ -37,10 +37,8 @@ def download(component, parent, outdir):
         if name.split('/', 1)[-1] == '':
             continue
         outfile = outdir.joinpath(name.split('/', 1)[-1])
-        try:
+        if not outfile.parent.exists():
             outfile.parent.mkdir(parents=True)
-        except FileExistsError:
-            pass
         if name.endswith('/'):
             outfile.mkdir()
             continue
@@ -49,11 +47,10 @@ def download(component, parent, outdir):
 
 
 def start_component(args):
-    try:
-        args.path.mkdir()
-    except FileExistsError:
+    if args.path.exists():
         log.error("A file or folder with that name already exists")
         exit(1)
+    args.path.mkdir()
     try:
         download(args.component, args.parent, args.path)
     except:
