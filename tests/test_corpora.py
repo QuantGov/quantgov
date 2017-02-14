@@ -9,7 +9,10 @@ from pathlib import Path
 def build_recursive_directory_corpus(directory):
     for path, text in (('a/1.txt', 'foo'), ('b/2.txt', 'bar')):
         path = directory.joinpath(path)
-        path.parent.mkdir(parents=True, exist_ok=True)
+        try:
+            path.parent.mkdir(parents=True)
+        except FileExistsError:
+            continue
         with path.open('w', encoding='utf-8') as outf:
             outf.write(text)
     return quantgov.corpora.RecursiveDirectoryCorpusDriver(
