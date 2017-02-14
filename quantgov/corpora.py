@@ -143,7 +143,7 @@ class RecursiveDirectoryCorpusDriver(FlatFileCorpusDriver):
                 yield (stem,), subpath
 
     def gen_indices_and_paths(self):
-        yield from self._recursively_gen_indices_and_paths()
+        return self._recursively_gen_indices_and_paths()
 
 
 class NamePatternCorpusDriver(FlatFileCorpusDriver):
