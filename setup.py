@@ -5,8 +5,6 @@ https://packaging.python.org/en/latest/distributing.html
 https://github.com/pypa/sampleproject
 """
 
-import quantgov._version
-
 # Always prefer setuptools over distutils
 from setuptools import setup, find_packages
 # To use a consistent encoding
@@ -18,6 +16,9 @@ here = path.abspath(path.dirname(__file__))
 # Get the long description from the README file
 with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
     long_description = f.read()
+
+with open(path.join(here, 'quantgov', '_version'), encoding='utf-8') as f:
+    version = f.read().split('=', 1)[-1].strip()
 
 setup(
     name='quantgov',
