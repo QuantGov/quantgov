@@ -1,12 +1,20 @@
 language: python
 python:
-  - "2.7"
-  - "3.3"
-  - "3.4"
-  - "3.5"
-  - "3.6"
+- '2.7'
+- '3.3'
+- '3.4'
+- '3.5'
+- '3.6'
 install:
-    - pip install -U pytest
-    - pip install -r requirements.txt
-    - pip install .
+- pip install -U pytest
+- pip install -r requirements.txt
+- pip install .
 script: pytest
+deploy:
+  provider: pypi
+  user: QuantGov
+  password:
+    secure: klIbNSfnAAFP0EA1/KVrov+3mJNxgEtEoGFIV+7meDsKruEKcKAg6EHFmFozo0hpgPW2jPw0d+wFZ0EcrDqlKA7QKX7wYUPHKQ/QLEbJPWT5l70ZjMPzBEy4Vl71KX0SMCH4khB05ZliD4rbMHoviSByA7LuPi53NdH09qhwcll3NS4cm9ModnJBz0gX1k4b/2YkPHzBSBIMXpNsf/AGl76T7YYxaNDGNFvmIvg7ZVzFScRUVzf8UiEQ5M2njlbanbPbySL8rBrmBRGa3RIm1PNtl/nNiEMY0pt8kc/dGVAJcznqsoPdSYjIlxzHVok++ZjrVlbQqN5JqTub9ycUN894z/jdWDEzE81PjJ0FPB/2c2vtZdXR2IFpdM2Mp09GZmqTOpa8ec48hLJUstI0hyW2Rp/mLOVIt4sKwkE3ULCKTI01TDASKAhQJzxyv+UlW17CdkXd/dyuUchjJm6ZJtQC9hiEmaV/Yh+EPrgoE6nVZzDSk+3vJ/cYiRSlMTuHs0rXKVpxkGLtGEYJgrzu5dQzSz1oQA0Hfic2SZSOFvu9R6MYnLm4maxmf2KgI9sr213JWqBpkfuGOkrCTRjdLJOmVoGUPofuivP1IdoBEYzsS9shaiAe5gJ+ivK937OeaiN6c71+lFRL0rVuWddRFq8qw5fa++Z9PEjW9Ki2bcI=
+  on:
+    tags: true
+    distributions: sdist bdist_wheel
