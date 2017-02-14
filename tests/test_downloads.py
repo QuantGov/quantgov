@@ -23,6 +23,6 @@ def test_download(tmpdir, component):
 def test_noclobber(tmpdir):
     comp_dir = tmpdir.joinpath('corpus')
     comp_dir.mkdir()
-    with pytest.raises(subprocess.CalledProcessError)
+    with pytest.raises(subprocess.CalledProcessError):
         subprocess.run(['quantgov', 'start', 'corpus', str(comp_dir)],
                        check=True)
