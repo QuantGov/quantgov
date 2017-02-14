@@ -1,32 +1,21 @@
-import tempfile
-
 import pytest
 import quantgov.corpora
-
-from pathlib import Path
 
 
 def build_recursive_directory_corpus(directory):
     for path, text in (('a/1.txt', 'foo'), ('b/2.txt', 'bar')):
-        path = directory.joinpath(path)
-        try:
-            path.parent.mkdir(parents=True)
-        except FileExistsError:
-            continue
-        with path.open('w', encoding='utf-8') as outf:
-            outf.write(text)
+        directory.join(path).write_text(text, encoding='utf-8', ensure=True)
     return quantgov.corpora.RecursiveDirectoryCorpusDriver(
         directory=str(directory), index_labels=('letter', 'number'))
 
 
 def build_name_pattern_corpus(directory):
     for path, text in (('a_1.txt', 'foo'), ('b_2.txt', 'bar')):
-        path = directory.joinpath(path)
-        with path.open('w', encoding='utf-8') as outf:
-            outf.write(text)
+        path = directory.join(path).write_text(
+            text, encoding='utf-8', ensure=True)
     return quantgov.corpora.NamePatternCorpusDriver(
         pattern=r'(?P<letter>[a-z])_(?P<number>\d)',
-        directory=directory
+        directory=str(directory)
     )
 
 
@@ -36,15 +25,14 @@ def build_index_corpus(directory):
             ('a', '1', 'first.txt', 'foo'),
             ('b', '2', 'second.txt', 'bar')
     ):
-        outpath = directory.joinpath(path)
-        with outpath.open('w', encoding='utf-8') as outf:
-            outf.write(text)
-        rows.append((letter, number, str(outpath.resolve())))
-    index_path = directory.joinpath('index.csv')
+        outpath = directory.join(path, abs=1)
+        outpath.write_text(text, encoding='utf-8')
+        rows.append((letter, number, str(outpath)))
+    index_path = directory.join('index.csv')
     with index_path.open('w', encoding='utf-8') as outf:
         outf.write('letter,number,path\n')
         outf.write('\n'.join(','.join(row) for row in rows))
-    return quantgov.corpora.IndexDriver(index_path)
+    return quantgov.corpora.IndexDriver(str(index_path))
 
 
 BUILDERS = {
@@ -55,10 +43,9 @@ BUILDERS = {
 
 
 @pytest.fixture(scope='module', params=list(BUILDERS.keys()))
-def corpus(request):
-    with tempfile.TemporaryDirectory() as tmpdir:
-        tmpdir = Path(tmpdir)
-        yield BUILDERS[request.param](tmpdir)
+def corpus(request, tmpdir_factory):
+    tmpdir = tmpdir_factory.mktemp(request.param, numbered=True)
+    return BUILDERS[request.param](tmpdir)
 
 
 def test_index_labels(corpus):
@@ -81,7 +68,7 @@ def test_corpus_streamer(corpus):
         assert streamer.documents_streamed == len(served)
         assert not streamer.finished
     assert streamer.documents_streamed == len(served)
-    assert streamer.finished 
+    assert streamer.finished
     assert tuple(served) == (
         (('a', '1'), 'foo'),
         (('b', '2'), 'bar')
