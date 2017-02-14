@@ -3,14 +3,14 @@ import quantgov.corpora
 
 
 def build_recursive_directory_corpus(directory):
-    for path, text in (('a/1.txt', 'foo'), ('b/2.txt', 'bar')):
+    for path, text in (('a/1.txt', u'foo'), ('b/2.txt', u'bar')):
         directory.join(path).write_text(text, encoding='utf-8', ensure=True)
     return quantgov.corpora.RecursiveDirectoryCorpusDriver(
         directory=str(directory), index_labels=('letter', 'number'))
 
 
 def build_name_pattern_corpus(directory):
-    for path, text in (('a_1.txt', 'foo'), ('b_2.txt', 'bar')):
+    for path, text in (('a_1.txt', u'foo'), ('b_2.txt', u'bar')):
         path = directory.join(path).write_text(
             text, encoding='utf-8', ensure=True)
     return quantgov.corpora.NamePatternCorpusDriver(
@@ -22,8 +22,8 @@ def build_name_pattern_corpus(directory):
 def build_index_corpus(directory):
     rows = []
     for letter, number, path, text in (
-            ('a', '1', 'first.txt', 'foo'),
-            ('b', '2', 'second.txt', 'bar')
+            ('a', '1', 'first.txt', u'foo'),
+            ('b', '2', 'second.txt', u'bar')
     ):
         outpath = directory.join(path, abs=1)
         outpath.write_text(text, encoding='utf-8')
