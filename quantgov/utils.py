@@ -1,6 +1,6 @@
 # TODO: Docstrings
 import concurrent.futures
-import os
+import multiprocessing
 
 _POOLS = {
     'thread': concurrent.futures.ThreadPoolExecutor,
@@ -25,7 +25,7 @@ def lazy_parallel(func, *iterables, **kwargs):
     worker = kwargs.get('worker', 'thread')
     max_workers = kwargs.get('max_workers')
     if max_workers is None:  # Not in back-port
-        max_workers = (os.cpu_count() or 1)
+        max_workers = (multiprocessing.cpu_count() or 1)
         if worker == 'thread':
             max_workers *= 5
     try:
