@@ -134,13 +134,12 @@ class RecursiveDirectoryCorpusDriver(FlatFileCorpusDriver):
         subpaths = sorted(i for i in directory.iterdir()
                           if not i.name.startswith('.'))
         for subpath in subpaths:
-            stem = subpath.stem
             if subpath.is_dir():
                 for idx, path in self._recursively_gen_indices_and_paths(
                         subpath):
-                    yield (stem,) + idx, path
+                    yield (subpath.name,) + idx, path
             else:
-                yield (stem,), subpath
+                yield (subpath.stem,), subpath
 
     def gen_indices_and_paths(self):
         return self._recursively_gen_indices_and_paths()
