@@ -91,9 +91,19 @@ class FlatFileCorpusDriver(CorpusDriver):
     """
     Superclass for drivers that keep each document in a separate file.
     """
-    def __init__(self, index_labels, encoding="utf-8"):
+    def __init__(self, index_labels, encoding="utf-8", cache=True):
         super(FlatFileCorpusDriver, self).__init__(index_labels)
         self.encoding = encoding
+        self.cache = cache
+        self._mapping = None
+
+    @property
+    def mapping(self):
+        if self._mapping is None:
+            self._mapping = {
+                idx: path for idx, path in self.gen_indices_and_paths()
+            }
+        return self._mapping
 
     def gen_indices_and_paths(self):
         """
@@ -112,19 +122,26 @@ class FlatFileCorpusDriver(CorpusDriver):
 
     def __getitem__(self, key):
         self.validate_key(key)
-        for idx, path in self.gen_indices_and_paths():
-            if idx == key:
-                return self.read((idx, path))
+        if self.cache:
+            path = self.mapping[key]
+        else:
+            for idx, path in self.gen_indices_and_paths():
+                if idx == key:
+                    break
+            else:
+                raise KeyError()
+        return self.read((key, path))
 
     def stream(self):
         return utils.lazy_parallel(self.read, self.gen_indices_and_paths())
 
 
 class RecursiveDirectoryCorpusDriver(FlatFileCorpusDriver):
-    # TODO: Docstrings
-    def __init__(self, directory, index_labels, encoding='utf-8'):
+    """
+    """
+    def __init__(self, directory, index_labels, encoding='utf-8', cache=True):
         super(RecursiveDirectoryCorpusDriver, self).__init__(
-            index_labels, encoding)
+            index_labels, encoding, cache=cache)
         self.directory = Path(directory).resolve()
         self.encoding = encoding
 
@@ -153,13 +170,14 @@ class NamePatternCorpusDriver(FlatFileCorpusDriver):
     The index labels are, the group names contained in the regular expression
     in the order that they appear
     """
-    def __init__(self, pattern, directory, encoding='utf-8'):
+    def __init__(self, pattern, directory, encoding='utf-8', cache=True):
         self.pattern = re.compile(pattern)
         index_labels = (
             i[0] for i in
             sorted(self.pattern.groupindex.items(), key=lambda x: x[1])
         )
-        super(NamePatternCorpusDriver, self).__init__(index_labels, encoding)
+        super(NamePatternCorpusDriver, self).__init__(
+            index_labels=index_labels, encoding=encoding, cache=cache)
         self.directory = Path(directory)
 
     def gen_indices_and_paths(self):
@@ -177,12 +195,12 @@ class IndexDriver(FlatFileCorpusDriver):
     file and the other columns form the index. Index label names are taken from
     the csv header.
     """
-    def __init__(self, index, encoding='utf-8'):
+    def __init__(self, index, encoding='utf-8', cache=True):
         self.index = Path(index)
-        with self.index.open() as inf:
+        with self.index.open(encoding=encoding) as inf:
             index_labels = next(csv.reader(inf))[:-1]
-        super(IndexDriver, self).__init__(index_labels)
-        self.encoding = encoding
+        super(IndexDriver, self).__init__(
+            index_labels=index_labels, encoding=encoding, cache=cache)
 
     def gen_indices_and_paths(self):
         with self.index.open() as inf:
