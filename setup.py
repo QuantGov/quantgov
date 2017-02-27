@@ -33,6 +33,7 @@ def find_version(*file_paths):
 
 long_description = read("README.rst")
 version = find_version("quantgov", "__init__.py")
+install_requires = read('requirements.txt').splitlines()
 
 setup(
     name='quantgov',
@@ -46,7 +47,7 @@ setup(
     long_description=long_description,
 
     # The project's main homepage.
-    url='https://github.com/pypa/sampleproject',
+    url='http://www.quantgov.org',
 
     # Author details
     author='Oliver Sherouse',
@@ -87,11 +88,7 @@ setup(
     # You can just specify the packages manually here if your project is
     # simple. Or you can use find_packages().
     packages=['quantgov'],
-    install_requires=[],
-    extras_require={
-        'dev': [],
-        'test': [],
-    },
+    install_requires=install_requires,
     # To provide executable scripts, use entry points in preference to the
     # "scripts" keyword. Entry points provide cross-platform support and allow
     # pip to create the appropriate form of executable for the target platform.
