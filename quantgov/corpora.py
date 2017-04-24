@@ -167,7 +167,7 @@ class NamePatternCorpusDriver(FlatFileCorpusDriver):
     Serve a corpus with all files in a single directory and filenames defined
     by a regular expression.
 
-    The index labels are, the group names contained in the regular expression
+    The index labels are the group names contained in the regular expression
     in the order that they appear
     """
     def __init__(self, pattern, directory, encoding='utf-8', cache=True):
