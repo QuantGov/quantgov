@@ -1,5 +1,5 @@
 """
-quantgov.corpora.builtins: Functions for analyzing a single Document
+quantgov.corpora.utils - utility functions for the corpus submodule
 """
 import sys
 
