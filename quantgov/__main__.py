@@ -1,5 +1,5 @@
 """
-Quantgov: a policy analytics framework 
+Quantgov: a policy analytics framework
 """
 import argparse
 import io
