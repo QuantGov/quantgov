@@ -33,7 +33,7 @@ setup(
     name='quantgov',
     version=version,
 
-    description='A Machine-Learning Framework for Turning Text Into Data',
+    description='A Policy Analytics Framework',
     long_description=long_description,
     url='https://www.quantgov.org',
     author='Oliver Sherouse',
