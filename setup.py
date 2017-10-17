@@ -5,7 +5,7 @@ A setuptools-based setup module.
 import os
 import re
 
-from setuptools import setup
+from setuptools import setup, find_packages
 from codecs import open
 
 
@@ -51,13 +51,9 @@ setup(
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
     ],
-
-    # What does your project relate to?
     keywords='quantgov economics policy government machine learning',
-
-    # You can just specify the packages manually here if your project is
-    # simple. Or you can use find_packages().
-    packages=['quantgov'],
+    packages=find_packages(
+        exclude=["*.tests", "*.tests.*", "tests.*", "tests"]),
     install_requires=[
         'requests',
         'futures;python_version<"3.2"',
@@ -66,9 +62,6 @@ setup(
     extras_require={
         'testing': ['pytest-flake8']
     },
-    # To provide executable scripts, use entry points in preference to the
-    # "scripts" keyword. Entry points provide cross-platform support and allow
-    # pip to create the appropriate form of executable for the target platform.
     entry_points={
         'console_scripts': [
             'quantgov=quantgov.__main__:main',
