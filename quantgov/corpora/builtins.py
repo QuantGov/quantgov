@@ -1,16 +1,26 @@
 """
 quantgov.corpora.builtins: Functions for analyzing a single Document
 """
-import sys
+import re
 
-from pathlib import Path
+import quantgov
 
 
-def load_driver(corpus):
-    corpus = Path(corpus)
-    if corpus.name == 'driver.py':
-        corpus = corpus.parent
-    sys.path.insert(0, str(corpus))
-    from driver import driver
-    sys.path.pop(0)
-    return driver
+def count_words(doc, word_pattern):
+    return doc.index + (len(word_pattern.findall(doc.text)),)
+
+
+count_words.cli = quantgov.utils.CLISpec(
+    help='Word Counter',
+    arguments=[
+        quantgov.utils.CLIArg(
+            flags=('--word_pattern', '-wp'),
+            kwargs={
+                'help': 'regular expression defining a "word"',
+                'type': re.compile,
+                'default': re.compile(r'\b\w+\b')
+            }
+        )
+    ]
+)
+count_words.get_columns = lambda x: ('words',)
