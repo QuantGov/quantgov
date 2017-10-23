@@ -94,10 +94,10 @@ def start_component(args):
 def run_corpus_builtin(args):
     driver = quantgov.load_driver(args.corpus)
     writer = csv.writer(args.outfile)
-    basefunc = getattr(quantgov.corpora.builtins, args.subcommand)
-    writer.writerow(driver.index_labels + basefunc.get_columns(args))
+    builtin = getattr(quantgov.corpora.builtins, args.subcommand)
+    writer.writerow(driver.index_labels + builtin.get_columns(args))
     partial = functools.partial(
-        basefunc,
+        builtin.process_document,
         **{i: j for i, j in vars(args).items()
            if i not in {'command', 'subcommand', 'outfile', 'corpus'}}
     )

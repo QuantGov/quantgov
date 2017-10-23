@@ -28,7 +28,7 @@ class WordCounter():
         return ('words',)
 
     @staticmethod
-    def count_words(doc, pattern):
+    def process_document(doc, pattern):
         return doc.index + (len(pattern.findall(doc.text)),)
 
 
@@ -63,10 +63,11 @@ class TermCounter():
         return (tuple(terms))
 
     @staticmethod
-    def count_terms(doc, terms, pattern):
+    def process_document(doc, terms, pattern):
         text = ' '.join(doc.text.split()).lower()
+        terms.sort(key=len, reverse=True)
         combined_pattern = re.compile(pattern.format('|'.join(terms)))
         term_counts = collections.Counter(
             i.groupdict()['match'] for i in combined_pattern.finditer(text)
         )
-        return doc.index, term_counts
+        return doc.index + tuple(term_counts.values())
