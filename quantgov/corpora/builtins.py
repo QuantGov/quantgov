@@ -32,7 +32,7 @@ class WordCounter():
         return doc.index + (len(pattern.findall(doc.text)),)
 
 
-class TermCounter():
+class OccuranceCounter():
 
     cli = quantgov.utils.CLISpec(
         help="Term Counter for Specific Words",
@@ -59,15 +59,15 @@ class TermCounter():
     )
 
     @staticmethod
-    def get_columns(terms):
-        return (tuple(terms))
+    def get_columns(args):
+        return (tuple(args['terms']))
 
     @staticmethod
     def process_document(doc, terms, pattern):
         text = ' '.join(doc.text.split()).lower()
-        terms.sort(key=len, reverse=True)
-        combined_pattern = re.compile(pattern.format('|'.join(terms)))
+        terms_sorted = sorted(terms, key=len, reverse=True)
+        combined_pattern = re.compile(pattern.format('|'.join(terms_sorted)))
         term_counts = collections.Counter(
             i.groupdict()['match'] for i in combined_pattern.finditer(text)
         )
-        return doc.index + tuple(term_counts.values())
+        return doc.index + tuple(term_counts[i] for i in terms)
