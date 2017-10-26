@@ -48,8 +48,8 @@ def parse_args():
         subcommand.add_argument(
             '-o', '--outfile',
             type=lambda x: open(x, 'w', newline='', encoding=ENCODE_OUT),
-            default=io.TextIOWrapper(
-                sys.stdout.buffer, newline='', encoding=ENCODE_OUT))
+            default=sys.stdout
+        )
     return parser.parse_args()
 
 
