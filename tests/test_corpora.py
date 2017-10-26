@@ -1,5 +1,8 @@
 import pytest
 import quantgov.corpora
+import subprocess
+
+from pathlib import Path
 
 
 def build_recursive_directory_corpus(directory):
@@ -74,3 +77,44 @@ def test_corpus_streamer(corpus):
         (('b', '2'), 'bar')
     )
     assert streamer.index == [('a', '1'), ('b', '2')]
+
+
+PSEUDO_CORPUS_PATH = Path(__file__).resolve().parent.joinpath('pseudo_corpus')
+
+
+def check_output(cmd):
+    return (
+        subprocess.check_output(cmd, universal_newlines=True)
+        .replace('\n\n', '\n')
+    )
+
+
+def test_wordcount():
+    output = check_output(
+        ['quantgov', 'corpus', 'count_words', str(PSEUDO_CORPUS_PATH)],
+    )
+    assert output == 'file,words\n1,248\n2,800\n'
+
+
+def test_wordcount_pattern():
+    output = check_output(
+        ['quantgov', 'corpus', 'count_words', str(PSEUDO_CORPUS_PATH),
+         '--word_pattern', '\S+']
+    )
+    assert output == 'file,words\n1,248\n2,800\n'
+
+
+def test_termcount():
+    output = check_output(
+        ['quantgov', 'corpus', 'count_occurrences', str(PSEUDO_CORPUS_PATH),
+         'lorem'],
+    )
+    assert output == 'file,lorem\n1,1\n2,1\n'
+
+
+def test_termcount_multiple():
+    output = check_output(
+        ['quantgov', 'corpus', 'count_occurrences', str(PSEUDO_CORPUS_PATH),
+         'lorem', 'dolor sit'],
+    )
+    assert output == 'file,lorem,dolor sit\n1,1,1\n2,1,0\n'

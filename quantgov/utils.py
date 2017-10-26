@@ -1,4 +1,5 @@
 # TODO: Docstrings
+import collections
 import concurrent.futures
 import multiprocessing
 
@@ -42,3 +43,7 @@ def lazy_parallel(func, *iterables, **kwargs):
                 yield jobs.pop(0).result()
         for job in jobs:
             yield job.result()
+
+
+CLISpec = collections.namedtuple('CLISpec', ['help', 'arguments'])
+CLIArg = collections.namedtuple('CLIArg', ['flags', 'kwargs'])
