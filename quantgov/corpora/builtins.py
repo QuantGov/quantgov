@@ -6,6 +6,8 @@ import collections
 
 import quantgov
 
+commands = {}
+
 
 class WordCounter():
 
@@ -24,26 +26,28 @@ class WordCounter():
     )
 
     @staticmethod
-    def get_columns():
+    def get_columns(args):
         return ('words',)
 
     @staticmethod
-    def process_document(doc, pattern):
-        return doc.index + (len(pattern.findall(doc.text)),)
+    def process_document(doc, word_pattern):
+        return doc.index + (len(word_pattern.findall(doc.text)),)
 
 
-class OccuranceCounter():
+commands['count_words'] = WordCounter
+
+
+class OccurrenceCounter():
 
     cli = quantgov.utils.CLISpec(
         help="Term Counter for Specific Words",
         arguments=[
             quantgov.utils.CLIArg(
-                flags=('--terms'),
+                flags=('terms'),
                 kwargs={
                     'help': 'list of words to be counted',
-                    'type': tuple,
-                    'default': ('shall', 'must', 'may not',
-                                'required', 'prohibited',),
+                    'default': ['shall', 'must', 'may not',
+                                'required', 'prohibited', ],
                     'nargs': '+'
                 }
             ),
@@ -71,3 +75,6 @@ class OccuranceCounter():
             i.groupdict()['match'] for i in combined_pattern.finditer(text)
         )
         return doc.index + tuple(term_counts[i] for i in terms)
+
+
+commands['count_occurrences'] = OccurrenceCounter
