@@ -25,14 +25,6 @@ _URL = 'https://github.com/QuantGov/{component}/archive/{parent}.zip'
 ENCODE_OUT = 'utf-8'
 
 
-def get_public_functions(library):
-    return [
-        i for i in vars(library).values()
-        if hasattr(i, 'cli')
-        and isinstance(getattr(i, 'cli'), quantgov.utils.CLISpec)
-    ]
-
-
 def parse_args():
     parser = argparse.ArgumentParser(description=__doc__)
     subparsers = parser.add_subparsers(dest='command')
@@ -43,12 +35,12 @@ def parse_args():
     create.add_argument('--parent', default='master')
     corpus = subparsers.add_parser('corpus')
     corpus_subcommands = corpus.add_subparsers(dest='subcommand')
-    for func in get_public_functions(quantgov.corpora.builtins):
+    for command, builtin in quantgov.corpora.builtins.commands.items():
         subcommand = corpus_subcommands.add_parser(
-            func.__name__, help=func.cli.help)
+            command, help=builtin.cli.help)
         subcommand.add_argument(
             'corpus', help='Path to a QuantGov Corpus directory')
-        for argument in func.cli.arguments:
+        for argument in builtin.cli.arguments:
             flags = ((argument.flags,) if isinstance(argument.flags, str)
                      else argument.flags)
             kwargs = {} if argument.kwargs is None else argument.kwargs
@@ -56,8 +48,8 @@ def parse_args():
         subcommand.add_argument(
             '-o', '--outfile',
             type=lambda x: open(x, 'w', newline='', encoding=ENCODE_OUT),
-            default=io.TextIOWrapper(
-                sys.stdout.buffer, encoding=ENCODE_OUT))
+            default=sys.stdout
+        )
     return parser.parse_args()
 
 
@@ -86,7 +78,7 @@ def start_component(args):
     args.path.mkdir()
     try:
         download(args.component, args.parent, args.path)
-    except:
+    except Exception:
         shutil.rmtree(str(args.path))
         raise
 
@@ -94,12 +86,13 @@ def start_component(args):
 def run_corpus_builtin(args):
     driver = quantgov.load_driver(args.corpus)
     writer = csv.writer(args.outfile)
-    basefunc = getattr(quantgov.corpora.builtins, args.subcommand)
-    writer.writerow(driver.index_labels + basefunc.get_columns(args))
+    builtin = quantgov.corpora.builtins.commands[args.subcommand]
+    func_args = {i: j for i, j in vars(args).items()
+                 if i not in {'command', 'subcommand', 'outfile', 'corpus'}}
+    writer.writerow(driver.index_labels + builtin.get_columns(func_args))
     partial = functools.partial(
-        basefunc,
-        **{i: j for i, j in vars(args).items()
-           if i not in {'command', 'subcommand', 'outfile', 'corpus'}}
+        builtin.process_document,
+        **func_args
     )
     for i in quantgov.utils.lazy_parallel(partial, driver.stream()):
         writer.writerow(i)
