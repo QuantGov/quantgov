@@ -78,7 +78,7 @@ def start_component(args):
     args.path.mkdir()
     try:
         download(args.component, args.parent, args.path)
-    except:
+    except Exception:
         shutil.rmtree(str(args.path))
         raise
 
