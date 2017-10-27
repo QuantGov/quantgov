@@ -1,11 +1,10 @@
 import configparser
 import logging
-import sys
 
 import sklearn.model_selection
 import pandas as pd
 
-from pathlib import Path
+import quantgov.estimator.utils as eutils
 
 log = logging.log(__name__)
 
@@ -63,28 +62,7 @@ def write_suggestion(results, file):
     config.write(file)
 
 
-def load_models(path):
-    """
-    Load models list from path
-
-    Arguments:
-
-        * **path**:  Path to a python module containing a list of
-            `quantgov.estimator.CandidateModel` objects in a module-level
-    """
-    path = Path(path)
-    sys.path.insert(0, str(path))
-    try:
-        assert ' ' not in path.name
-    except AssertionError:
-        raise ValueError("models file name must contain no spaces")
-    models = None
-    exec('from {} import models'.format(path.name))
-    sys.path.pop(0)
-    return models
-
-
-def evaluate_models(modeldefs, labels, trainers, folds, scoring, results_file,
+def evaluate_models(modeldefs, trainers, labels, folds, scoring, results_file,
                     suggestion_file):
     """
     Evaluate Candidate Models and write out a suggestion
@@ -94,15 +72,16 @@ def evaluate_models(modeldefs, labels, trainers, folds, scoring, results_file,
         * **modeldefs**:  Path to a python module containing a list of
             `quantgov.estimator.CandidateModel` objects in a module-level
             variable named `models'.
-        * **labels**: a `quantgov.estimator.Labels` object
         * **trainers**: a `quantgov.estimator.Trainers` object
+        * **labels**: a `quantgov.estimator.Labels` object
         * **folds**: folds to use in cross-validation
+        * **scoring**: scoring method to use
         * **results_file**: open file object to which results should be written
         * **suggestion_file**: open file object to which the model suggestion
         should be written
     """
     assert labels.index == trainers.index
-    models = load_models(modeldefs)
+    models = eutils.load_models(modeldefs)
     results = evaluate_models(
         models, trainers.vectors, labels.labels, folds, scoring)
     results.to_csv(results_file, index=False)

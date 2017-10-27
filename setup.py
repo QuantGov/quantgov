@@ -55,9 +55,12 @@ setup(
     packages=find_packages(
         exclude=["*.tests", "*.tests.*", "tests.*", "tests"]),
     install_requires=[
-        'requests',
         'futures;python_version<"3.2"',
+        'joblib',
+        'pandas',
         'pathlib;python_version<"3.4"',
+        'requests',
+        'scikit-learn'
     ],
     extras_require={
         'testing': ['pytest-flake8']
