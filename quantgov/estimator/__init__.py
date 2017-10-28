@@ -1,8 +1,9 @@
 __all__ = [
-    'evaluate',
-    'training',
+    'candidate_sets',
     'estimation',
-    'structures'
+    'evaluate',
+    'structures',
+    'training',
 ]
 
 from .structures import (
