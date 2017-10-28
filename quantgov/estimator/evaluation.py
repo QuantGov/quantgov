@@ -4,13 +4,13 @@ import logging
 import sklearn.model_selection
 import pandas as pd
 
-import quantgov.estimator.utils as eutils
+from . import utils as eutils
 
-log = logging.log(__name__)
+log = logging.getLogger(name=__name__)
 
 
 def evaluate_model(model, X, y, folds, scoring):
-    log.info('Processing {}'.format(model.name))
+    log.info('Evaluating {}'.format(model.name))
     if hasattr(y[0], '__getitem__'):
         cv = sklearn.model_selection.StratifiedKFold(folds, shuffle=True)
         if '_' not in scoring:
@@ -35,11 +35,13 @@ def evaluate_all_models(models, X, y, folds, scoring):
         evaluate_model(model, X, y, folds, scoring) for model in models])
     results = results[
         ['model', 'mean_test_score', 'std_test_score',
-         'mean_train_score', 'std_train_score',
          'mean_fit_time', 'std_fit_time',
          'mean_score_time', 'std_score_time']
-        + sorted(i for i in results if i.startswith('param'))
-        + sorted(i for i in results if i.startswith('split'))
+        + sorted(i for i in results if i.startswith('param_'))
+        + sorted(i for i in results
+                 if i.startswith('split')
+                 and '_train_' not in i
+                 )
         + ['params']
     ]
     return results
@@ -51,19 +53,19 @@ def write_suggestion(results, file):
 
     Arguments:
 
-        * **Results**: a A DataFrame as returned by `evaluate_models`
+        * **Results**: a A DataFrame as returned by `evaluate_all_models`
         * **file**: an open file-like object
     """
     best_model = results.iloc[results['mean_test_score'].idxmax()]
     config = configparser.ConfigParser()
     config.optionxform = str
     config['Model'] = {'name': best_model['model']}
-    config['Parameters'] = best_model['params']
+    config['Parameters'] = {i: j for i, j in best_model['params'].items()}
     config.write(file)
 
 
-def evaluate_models(modeldefs, trainers, labels, folds, scoring, results_file,
-                    suggestion_file):
+def evaluate(modeldefs, trainers, labels, folds, scoring, results_file,
+             suggestion_file):
     """
     Evaluate Candidate Models and write out a suggestion
 
@@ -82,7 +84,7 @@ def evaluate_models(modeldefs, trainers, labels, folds, scoring, results_file,
     """
     assert labels.index == trainers.index
     models = eutils.load_models(modeldefs)
-    results = evaluate_models(
+    results = evaluate_all_models(
         models, trainers.vectors, labels.labels, folds, scoring)
     results.to_csv(results_file, index=False)
     write_suggestion(results, suggestion_file)

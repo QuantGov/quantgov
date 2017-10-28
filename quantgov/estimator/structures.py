@@ -4,7 +4,7 @@ import joblib as jl
 
 class _PersistanceMixin(object):
     def save(self, path):
-        jl.dump(self, str(path))
+        jl.dump(self, path)
 
 
 class Labels(

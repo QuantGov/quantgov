@@ -12,13 +12,15 @@ def load_models(path):
         * **path**:  Path to a python module containing a list of
             `quantgov.estimator.CandidateModel` objects in a module-level
     """
-    path = Path(path)
-    sys.path.insert(0, str(path))
+    path = Path(path).resolve()
     try:
-        assert ' ' not in path.name
+        assert ' ' not in path.stem
     except AssertionError:
         raise ValueError("models file name must contain no spaces")
-    models = None
-    exec('from {} import models'.format(path.name))
+    sys.path.insert(0, str(path.parent))
+    print(sys.path)
+    exec('import {}'.format(path.stem))
+    models = eval('{}.models'.format(path.stem))
+    exec('del({})'.format(path.stem))
     sys.path.pop(0)
     return models

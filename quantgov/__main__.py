@@ -72,15 +72,13 @@ def parse_args():
     evaluate.add_argument(
         'labels', type=jl.load, help='saved Labels object')
     evaluate.add_argument(
-        '-o', '--output_results',
-        type=lambda x: x.open('w', encoding=ENCODE_OUT),
-        default=sys.stdout,
+        'output_results',
+        type=lambda x: open(x, 'w', encoding=ENCODE_OUT),
         help='Output file for evaluation results'
     )
     evaluate.add_argument(
-        '--output_suggestion',
-        type=lambda x: x.open('w', encoding=ENCODE_OUT),
-        required=True,
+        'output_suggestion',
+        type=lambda x: open(x, 'w', encoding=ENCODE_OUT),
         help='Output file for model suggestion'
     )
     evaluate.add_argument(
@@ -177,7 +175,7 @@ def run_corpus_builtin(args):
 
 def run_estimator(args):
     if args.subcommand == "evaluate":
-        quantgov.estimator.evaluate_models(
+        quantgov.estimator.evaluate(
             args.modeldefs, args.trainers, args.labels, args.folds,
             args.scoring, args.output_results, args.output_suggestion
         )

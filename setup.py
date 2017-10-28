@@ -60,7 +60,9 @@ setup(
         'pandas',
         'pathlib;python_version<"3.4"',
         'requests',
-        'scikit-learn'
+        'scikit-learn',
+        'scipy',
+        'snakemake',
     ],
     extras_require={
         'testing': ['pytest-flake8']
