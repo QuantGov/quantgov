@@ -22,7 +22,7 @@ classification = [
         name="Logistic Regression",
         model=sklearn.pipeline.Pipeline(steps=(
             ('tfidf', sklearn.feature_extraction.text.TfidfTransformer()),
-            ('logit', sklearn.linear_model.LogisticRegression(n_jobs=-1)),
+            ('logit', sklearn.linear_model.LogisticRegression()),
         )),
         parameters={
             'logit__C': np.logspace(-2, 2, 5)
