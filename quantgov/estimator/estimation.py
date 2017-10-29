@@ -9,7 +9,7 @@ log = logging.getLogger(__name__)
 def get_pipeline(vectorizer, model):
     return sklearn.pipeline.Pipeline((
         ('vectorizer', vectorizer),
-        ('model', model)
+        ('model', model.model)
     ))
 
 
@@ -82,10 +82,10 @@ def estimate(vectorizer, model, corpus, probability, outfile):
     writer = csv.writer(outfile)
     if len(model.label_names) > 1:
         multilabel = True
-        multiclass = any(is_multiclass(i) for i in model.classes_)
+        multiclass = any(is_multiclass(i) for i in model.model.classes_)
     else:
         multilabel = False
-        multiclass = is_multiclass(model.classes_)
+        multiclass = is_multiclass(model.model.classes_)
 
     # TODO: This is very ugly and complicated and should probably be refactored
     if probability:

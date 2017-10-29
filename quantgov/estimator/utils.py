@@ -18,7 +18,6 @@ def load_models(path):
     except AssertionError:
         raise ValueError("models file name must contain no spaces")
     sys.path.insert(0, str(path.parent))
-    print(sys.path)
     exec('import {}'.format(path.stem))
     models = eval('{}.models'.format(path.stem))
     exec('del({})'.format(path.stem))

@@ -92,10 +92,7 @@ def parse_args():
         'modeldefs', type=Path,
         help='Python module containing candidate models'
     )
-    train.add_argument(
-        'configfile', type=lambda x: open(x),
-        help='Model configuration file'
-    )
+    train.add_argument('configfile', help='Model configuration file')
     train.add_argument(
         'trainers', type=jl.load, help='saved Trainers object')
     train.add_argument(
@@ -119,9 +116,13 @@ def parse_args():
         'corpus', type=quantgov.load_driver,
         help='Path to a QuantGov corpus')
     estimate.add_argument(
-        'labels', type=jl.load, help='saved Labels object')
+        '--probability', action='store_true',
+        help='output probabilities instead of predictions')
     estimate.add_argument(
-        '-o', '--outfile', help='location to save estimation results'
+        '-o', '--outfile',
+        type=lambda x: open(x, 'w', newline='', encoding='utf-8'),
+        default=sys.stdout,
+        help='location to save estimation results'
     )
 
     return parser.parse_args()
@@ -180,7 +181,7 @@ def run_estimator(args):
             args.scoring, args.output_results, args.output_suggestion
         )
     elif args.subcommand == "train":
-        quantgov.estimator.save_and_train_model(
+        quantgov.estimator.train_and_save_model(
             args.modeldefs, args.configfile, args.trainers, args.labels,
             args.outfile)
     elif args.subcommand == "estimate":
