@@ -31,8 +31,10 @@ def evaluate_model(model, X, y, folds, scoring):
 
 
 def evaluate_all_models(models, X, y, folds, scoring):
-    results = pd.concat([
-        evaluate_model(model, X, y, folds, scoring) for model in models])
+    results = pd.concat(
+        [evaluate_model(model, X, y, folds, scoring) for model in models],
+        ignore_index=True
+    )
     results = results[
         ['model', 'mean_test_score', 'std_test_score',
          'mean_fit_time', 'std_fit_time',
@@ -56,7 +58,7 @@ def write_suggestion(results, file):
         * **Results**: a A DataFrame as returned by `evaluate_all_models`
         * **file**: an open file-like object
     """
-    best_model = results.iloc[results['mean_test_score'].idxmax()]
+    best_model = results.loc[results['mean_test_score'].idxmax()]
     config = configparser.ConfigParser()
     config.optionxform = str
     config['Model'] = {'name': best_model['model']}

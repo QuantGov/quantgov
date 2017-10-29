@@ -22,7 +22,7 @@ def estimate_simple(vectorizer, model, streamer):
 def estimate_probability(vectorizer, model, streamer):
     pipeline = get_pipeline(vectorizer, model)
     texts = (doc.text for doc in streamer)
-    truecol = list(int(i) for i in model.classes_).index(1)
+    truecol = list(int(i) for i in model.model.classes_).index(1)
     predicted = (i[truecol] for i in pipeline.predict_proba(texts))
     yield from zip(streamer.index, predicted)
 
@@ -32,7 +32,7 @@ def estimate_probability_multilabel(vectorizer, model, streamer):
     texts = (doc.text for doc in streamer)
     truecols = tuple(
         list(int(i) for i in label_classes).index(1)
-        for label_classes in model.classes_
+        for label_classes in model.model.classes_
     )
     predicted = pipeline.predict_proba(texts)
     for i, docidx in enumerate(streamer.index):
@@ -99,7 +99,8 @@ def estimate(vectorizer, model, corpus, probability, outfile):
                     docidx + (label_name, class_name, prediction)
                     for docidx, predictions in results
                     for label_name, label_classes, label_predictions
-                    in zip(model.label_names, model.classes_, predictions)
+                    in zip(
+                        model.label_names, model.model.classes_, predictions)
                     for class_name, prediction
                     in zip(label_classes, label_predictions)
                 )
@@ -120,7 +121,8 @@ def estimate(vectorizer, model, corpus, probability, outfile):
             writer.writerows(
                 docidx + (class_name, prediction)
                 for docidx, predictions in results
-                for class_name, prediction in zip(model.classes_, predictions)
+                for class_name, prediction in zip(
+                    model.model.classes_, predictions)
             )
         else:  # Simple probability
             results = estimate_probability(vectorizer, model, streamer)
