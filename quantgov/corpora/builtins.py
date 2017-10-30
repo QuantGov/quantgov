@@ -45,17 +45,24 @@ class OccurrenceCounter():
             quantgov.utils.CLIArg(
                 flags=('terms'),
                 kwargs={
-                    'help': 'list of words to be counted',
-                    'default': ['shall', 'must', 'may not',
-                                'required', 'prohibited', ],
+                    'help': 'list of terms to be counted',
                     'nargs': '+'
+                }
+            ),
+            quantgov.utils.CLIArg(
+                flags=('--total_label'),
+                kwargs={
+                    'metavar': 'LABEL',
+                    'help': (
+                        'output a column with sum of occurrences of all terms'
+                        ' with column name LABEL'
+                    ),
                 }
             ),
             quantgov.utils.CLIArg(
                 flags=('--pattern'),
                 kwargs={
                     'help': 'pattern to use in identifying words',
-                    'type': str,
                     'default': r'\b(?P<match>{})\b'
                 }
             )
@@ -64,17 +71,25 @@ class OccurrenceCounter():
 
     @staticmethod
     def get_columns(args):
-        return (tuple(args['terms']))
+        if args['total_label'] is not None:
+            return tuple(args['terms']) + (args['total_label'],)
+        return tuple(args['terms'])
 
     @staticmethod
-    def process_document(doc, terms, pattern):
+    def process_document(doc, terms, pattern, total_label):
         text = ' '.join(doc.text.split()).lower()
         terms_sorted = sorted(terms, key=len, reverse=True)
         combined_pattern = re.compile(pattern.format('|'.join(terms_sorted)))
         term_counts = collections.Counter(
             i.groupdict()['match'] for i in combined_pattern.finditer(text)
         )
-        return doc.index + tuple(term_counts[i] for i in terms)
+        if total_label is not None:
+            return (
+                doc.index
+                + tuple(term_counts[i] for i in terms)
+                + (sum(term_counts.values()),)
+            )
+        return (doc.index + tuple(term_counts[i] for i in terms))
 
 
 commands['count_occurrences'] = OccurrenceCounter
