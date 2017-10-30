@@ -12,12 +12,12 @@ log = logging.getLogger(name=__name__)
 def evaluate_model(model, X, y, folds, scoring):
     log.info('Evaluating {}'.format(model.name))
     if hasattr(y[0], '__getitem__'):
-        cv = sklearn.model_selection.StratifiedKFold(folds, shuffle=True)
+        cv = sklearn.model_selection.KFold(folds, shuffle=True)
         if '_' not in scoring:
             log.warning("No averaging method specified, assuming macro")
             scoring += '_macro'
     else:
-        cv = sklearn.model_selection.StratifiedKFold(folds, shuffle=True)
+        cv = sklearn.model_selection.KFold(folds, shuffle=True)
     gs = sklearn.model_selection.GridSearchCV(
         estimator=model.model,
         param_grid=model.parameters,
