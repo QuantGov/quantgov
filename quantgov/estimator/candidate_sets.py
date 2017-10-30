@@ -1,3 +1,16 @@
+"""
+quantgov.estimator.candidate_sets: Starter model candidate sets
+
+
+This module provides a few sample sets of models for common problems. These are
+mostly helpful for initial analysis; in general, you will want to customize
+these.
+
+The currently included candidates sets are:
+    * `classificaiton`: Random Forests and Logit with TF-IDF preprocessor
+    * `multilabel_classificaiton`: same as classification, with the Logit
+        classifier wrapped in a MultiOutputClassifier
+"""
 import numpy as np
 import sklearn.ensemble
 import sklearn.linear_model

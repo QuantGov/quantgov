@@ -1,3 +1,8 @@
+"""
+quantgov.estimator.estimation
+
+Functionality for making predictions with an estimator
+"""
 import csv
 import logging
 
@@ -7,6 +12,15 @@ log = logging.getLogger(__name__)
 
 
 def get_pipeline(vectorizer, model):
+    """
+    Get the full estimation pipeline
+
+    Arguments:
+        * vectorizer: a sklearn Vectorizer (or pipeline)
+        * model: a quantgov.estimator.Estimator
+
+    Returns: a sklearn Pipeline
+    """
     return sklearn.pipeline.Pipeline((
         ('vectorizer', vectorizer),
         ('model', model.model)
@@ -14,12 +28,36 @@ def get_pipeline(vectorizer, model):
 
 
 def estimate_simple(vectorizer, model, streamer):
+    """
+    Generate predictions for an estimator
+
+    Arguments:
+        * vectorizer: a sklearn Vectorizer (or pipeline)
+        * model: a quantgov.estimator.Estimator
+        * streamer: a quantgov.corpora.CorpusStreamer
+
+    Yields:
+        2-tuples of docindex, prediction
+
+    """
     pipeline = get_pipeline(vectorizer, model)
     texts = (doc.text for doc in streamer)
     yield from zip(streamer.index, pipeline.predict(texts))
 
 
 def estimate_probability(vectorizer, model, streamer):
+    """
+    Generate probabilities for a one-label estimator
+
+    Arguments:
+        * vectorizer: a sklearn Vectorizer (or pipeline)
+        * model: a quantgov.estimator.Estimator
+        * streamer: a quantgov.corpora.CorpusStreamer
+
+    Yields:
+        2-tuples of docindex, probability
+
+    """
     pipeline = get_pipeline(vectorizer, model)
     texts = (doc.text for doc in streamer)
     truecol = list(int(i) for i in model.model.classes_).index(1)
@@ -28,6 +66,18 @@ def estimate_probability(vectorizer, model, streamer):
 
 
 def estimate_probability_multilabel(vectorizer, model, streamer):
+    """
+    Generate probabilities for a multilabel binary estimator
+
+    Arguments:
+        * vectorizer: a sklearn Vectorizer (or pipeline)
+        * model: a quantgov.estimator.Estimator
+        * streamer: a quantgov.corpora.CorpusStreamer
+
+    Yields:
+        2-tuples of docindex, probability
+
+    """
     pipeline = get_pipeline(vectorizer, model)
     texts = (doc.text for doc in streamer)
     try:
@@ -49,12 +99,36 @@ def estimate_probability_multilabel(vectorizer, model, streamer):
 
 
 def estimate_probability_multiclass(vectorizer, model, streamer):
+    """
+    Generate probabilities for a one-label, multiclass estimator
+
+    Arguments:
+        * vectorizer: a sklearn Vectorizer (or pipeline)
+        * model: a quantgov.estimator.Estimator
+        * streamer: a quantgov.corpora.CorpusStreamer
+
+    Yields:
+        2-tuples of docindex, probability
+
+    """
     pipeline = get_pipeline(vectorizer, model)
     texts = (doc.text for doc in streamer)
     yield from zip(streamer.index, pipeline.predict_proba(texts))
 
 
 def estimate_probability_multilabel_multiclass(vectorizer, model, streamer):
+    """
+    Generate probabilities for a multilabel, multiclass estimator
+
+    Arguments:
+        * vectorizer: a sklearn Vectorizer (or pipeline)
+        * model: a quantgov.estimator.Estimator
+        * streamer: a quantgov.corpora.CorpusStreamer
+
+    Yields:
+        2-tuples of docindex, probability
+
+    """
     pipeline = get_pipeline(vectorizer, model)
     texts = (doc.text for doc in streamer)
     predicted = pipeline.predict_proba(texts)

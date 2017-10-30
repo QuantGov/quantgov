@@ -10,6 +10,19 @@ log = logging.getLogger(name=__name__)
 
 
 def evaluate_model(model, X, y, folds, scoring):
+    """
+    Evaluate a single model
+
+    Arguments:
+        * model: a quantgov.estimator.Model
+        * X: array-like of document vectors with shape [n_samples x n_features]
+        * y: array-like of labels with shape [n_samples X n_labels]
+        * folds: folds to use in cross-validation
+        * scoring: scoring method
+
+
+    Returns: pandas DataFrame with model evaluation results
+    """
     log.info('Evaluating {}'.format(model.name))
     if hasattr(y[0], '__getitem__'):
         cv = sklearn.model_selection.KFold(folds, shuffle=True)
@@ -31,6 +44,18 @@ def evaluate_model(model, X, y, folds, scoring):
 
 
 def evaluate_all_models(models, X, y, folds, scoring):
+    """
+    Evaluate a number of models
+
+    Arguments:
+        * models: a sequence of quantgov.estimator.Model objects
+        * X: array-like of document vectors with shape [n_samples x n_features]
+        * y: array-like of labels with shape [n_samples X n_labels]
+        * folds: folds to use in cross-validation
+        * scoring: scoring method
+
+    Returns: pandas DataFrame with model evaluation results
+    """
     results = pd.concat(
         [evaluate_model(model, X, y, folds, scoring) for model in models],
         ignore_index=True
