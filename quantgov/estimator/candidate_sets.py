@@ -1,7 +1,7 @@
 import numpy as np
 import sklearn.ensemble
 import sklearn.linear_model
-import sklearn.multiclass
+import sklearn.multioutput
 import sklearn.pipeline
 import sklearn.feature_extraction
 
@@ -46,12 +46,13 @@ multilabel_classification = [
         name="Logistic Regression",
         model=sklearn.pipeline.Pipeline(steps=(
             ('tfidf', sklearn.feature_extraction.text.TfidfTransformer()),
-            ('logit', sklearn.multiclass.OneVsRestClassifier(
-                sklearn.linear_model.LogisticRegression()),
-             )
+            ('logit', sklearn.multioutput.MultiOutputClassifier(
+                sklearn.linear_model.LogisticRegression(),
+                n_jobs=-1
+            )),
         )),
         parameters={
-            'logit__C': np.logspace(-2, 2, 5)
+            'logit__estimator__C': np.logspace(-2, 2, 5)
         }
     ),
 ]
