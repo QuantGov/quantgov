@@ -118,3 +118,11 @@ def test_termcount_multiple():
          'lorem', 'dolor sit'],
     )
     assert output == 'file,lorem,dolor sit\n1,1,1\n2,1,0\n'
+
+
+def test_termcount_multiple_with_label():
+    output = check_output(
+        ['quantgov', 'corpus', 'count_occurrences', str(PSEUDO_CORPUS_PATH),
+         'lorem', 'dolor sit', '--total_label', 'bothofem'],
+    )
+    assert output == 'file,lorem,dolor sit,bothofem\n1,1,1,2\n2,1,0,1\n'
