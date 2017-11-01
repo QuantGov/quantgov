@@ -189,7 +189,8 @@ class RecursiveDirectoryCorpusDriver(FlatFileCorpusDriver):
         values, i.e. {'index_name':('restraint_value',)}.
         """
         return qgutils.lazy_parallel(
-            self.read, self.gen_indices_and_paths_restrained(restraint=restraint)
+            self.read,
+            self.gen_indices_and_paths_restrained(restraint=restraint)
         )
 
 
