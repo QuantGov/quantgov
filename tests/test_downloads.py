@@ -7,7 +7,7 @@ import pytest
 def test_download(tmpdir, component):
     comp_dir = tmpdir.join(component)
     subprocess.check_call(['quantgov', 'start', component, str(comp_dir)])
-    assert comp_dir.join('makefile').check()
+    assert comp_dir.join('Snakefile').check()
 
 
 def test_noclobber(tmpdir):
