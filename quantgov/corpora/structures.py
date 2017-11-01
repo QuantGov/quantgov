@@ -141,6 +141,7 @@ class FlatFileCorpusDriver(CorpusDriver):
 class RecursiveDirectoryCorpusDriver(FlatFileCorpusDriver):
     """
     """
+
     def __init__(self, directory, index_labels, encoding='utf-8', cache=True):
         super(RecursiveDirectoryCorpusDriver, self).__init__(
             index_labels, encoding, cache=cache)
@@ -166,12 +167,12 @@ class RecursiveDirectoryCorpusDriver(FlatFileCorpusDriver):
                 if self.index_labels[level] in restraint.keys():
                     if subpath.name in restraint[self.index_labels[level]]:
                         for idx, path in self._gen_docinfo(
-                            subpath, level=level+1, restraint=restraint
+                            subpath, level=level + 1, restraint=restraint
                         ):
                             yield (subpath.name,) + idx, path
                 else:
-                    for idx, path in self._gen_docinfo(subpath, level=level+1,
-                                                       restraint=restraint):
+                    for idx, path in self._gen_docinfo(
+                            subpath, level=level + 1, restraint=restraint):
                         yield (subpath.name,) + idx, path
             else:
                 yield (subpath.stem,), subpath
