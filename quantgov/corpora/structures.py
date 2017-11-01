@@ -166,7 +166,8 @@ class RecursiveDirectoryCorpusDriver(FlatFileCorpusDriver):
                 if self.index_labels[level] in restraint.keys():
                     if subpath.name in restraint[self.index_labels[level]]:
                         for idx, path in self._gen_docinfo(subpath,
-                                                           level=level+1, restraint=restraint):
+                                                           level=level+1,
+                                                           restraint=restraint):
                             yield (subpath.name,) + idx, path
                 else:
                     for idx, path in self._gen_docinfo(subpath, level=level+1,
@@ -188,7 +189,8 @@ class RecursiveDirectoryCorpusDriver(FlatFileCorpusDriver):
         values, i.e. {'index_name':('restraint_value',)}.
         """
         return qgutils.lazy_parallel(self.read,
-                                     self.gen_indices_and_paths_restrained(restraint=restraint))
+                                     self.gen_indices_and_paths_restrained\
+                                     (restraint=restraint))
 
 
 class NamePatternCorpusDriver(FlatFileCorpusDriver):
