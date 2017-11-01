@@ -1,19 +1,18 @@
 """
-quantgov.corpora
+quantgov.corpora.structures
 
-Utility Classes for Writing QuantGov Corpora
+Classes for Writing QuantGov Corpora
 """
 
 import re
 import collections
 import csv
 import logging
-import sys
 
 from collections import namedtuple
 from pathlib import Path
 
-from . import utils
+from .. import utils as qgutils
 
 log = logging.getLogger(__name__)
 
@@ -24,6 +23,7 @@ class CorpusStreamer(object):
     """
     A knowledgable wrapper for a CorpusDriver stream
     """
+
     def __init__(self, iterable):
         self.iterable = iterable
         self.finished = False
@@ -46,6 +46,7 @@ class CorpusDriver(object):
 
     This class defines the Corpus Driver interface
     """
+
     def __init__(self, index_labels):
         if isinstance(index_labels, str):
             index_labels = (index_labels,)
@@ -91,6 +92,7 @@ class FlatFileCorpusDriver(CorpusDriver):
     """
     Superclass for drivers that keep each document in a separate file.
     """
+
     def __init__(self, index_labels, encoding="utf-8", cache=True):
         super(FlatFileCorpusDriver, self).__init__(index_labels)
         self.encoding = encoding
@@ -133,33 +135,64 @@ class FlatFileCorpusDriver(CorpusDriver):
         return self.read((key, path))
 
     def stream(self):
-        return utils.lazy_parallel(self.read, self.gen_indices_and_paths())
+        return qgutils.lazy_parallel(self.read, self.gen_indices_and_paths())
 
 
 class RecursiveDirectoryCorpusDriver(FlatFileCorpusDriver):
     """
     """
+
     def __init__(self, directory, index_labels, encoding='utf-8', cache=True):
         super(RecursiveDirectoryCorpusDriver, self).__init__(
             index_labels, encoding, cache=cache)
         self.directory = Path(directory).resolve()
         self.encoding = encoding
 
-    def _recursively_gen_indices_and_paths(self, directory=None):
+    def _gen_docinfo(self, directory=None, level=0, restraint=None):
+        """
+        Recursively generates indices and paths.
+        """
+
+        if restraint is None:
+            restraint = {}
+
         if directory is None:
             directory = self.directory
+
         subpaths = sorted(i for i in directory.iterdir()
                           if not i.name.startswith('.'))
+
         for subpath in subpaths:
             if subpath.is_dir():
-                for idx, path in self._recursively_gen_indices_and_paths(
-                        subpath):
-                    yield (subpath.name,) + idx, path
+                if self.index_labels[level] in restraint.keys():
+                    if subpath.name in restraint[self.index_labels[level]]:
+                        for idx, path in self._gen_docinfo(
+                            subpath, level=level + 1, restraint=restraint
+                        ):
+                            yield (subpath.name,) + idx, path
+                else:
+                    for idx, path in self._gen_docinfo(
+                            subpath, level=level + 1, restraint=restraint):
+                        yield (subpath.name,) + idx, path
             else:
                 yield (subpath.stem,), subpath
 
     def gen_indices_and_paths(self):
-        return self._recursively_gen_indices_and_paths()
+        return self._gen_docinfo()
+
+    def gen_indices_and_paths_restrained(self, restraint):
+        return self._gen_docinfo(restraint=restraint)
+
+    def extract(self, restraint):
+        """
+        Allows specification of index values to restrict corpus. 'restraint'
+        must be a dictionary of index names and tuples of allowable index
+        values, i.e. {'index_name':('restraint_value',)}.
+        """
+        return qgutils.lazy_parallel(
+            self.read,
+            self.gen_indices_and_paths_restrained(restraint=restraint)
+        )
 
 
 class NamePatternCorpusDriver(FlatFileCorpusDriver):
@@ -170,6 +203,7 @@ class NamePatternCorpusDriver(FlatFileCorpusDriver):
     The index labels are, the group names contained in the regular expression
     in the order that they appear
     """
+
     def __init__(self, pattern, directory, encoding='utf-8', cache=True):
         self.pattern = re.compile(pattern)
         index_labels = (
@@ -195,6 +229,7 @@ class IndexDriver(FlatFileCorpusDriver):
     file and the other columns form the index. Index label names are taken from
     the csv header.
     """
+
     def __init__(self, index, encoding='utf-8', cache=True):
         self.index = Path(index)
         with self.index.open(encoding=encoding) as inf:
@@ -208,13 +243,3 @@ class IndexDriver(FlatFileCorpusDriver):
             next(reader)
             for row in reader:
                 yield tuple(row[:-1]), Path(row[-1])
-
-
-def load_driver(corpus):
-    corpus = Path(corpus)
-    if corpus.name == 'driver.py':
-        corpus = corpus.parent
-    sys.path.insert(0, str(corpus))
-    from driver import driver
-    sys.path.pop(0)
-    return driver
