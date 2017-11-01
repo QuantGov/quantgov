@@ -147,7 +147,7 @@ class RecursiveDirectoryCorpusDriver(FlatFileCorpusDriver):
         self.directory = Path(directory).resolve()
         self.encoding = encoding
 
-    def _gen_docinfo(self, directory=None, level=0,restraint=None):
+    def _gen_docinfo(self, directory=None, level=0, restraint=None):
         """
         Recursively generates indices and paths.
         """
@@ -159,22 +159,21 @@ class RecursiveDirectoryCorpusDriver(FlatFileCorpusDriver):
             directory = self.directory
 
         subpaths = sorted(i for i in directory.iterdir()
-            if not i.name.startswith('.'))
+                          if not i.name.startswith('.'))
 
         for subpath in subpaths:
             if subpath.is_dir():
                 if self.index_labels[level] in restraint.keys():
                     if subpath.name in restraint[self.index_labels[level]]:
-                        for idx, path in self._gen_docinfo(subpath, 
-                                level=level+1, restraint=restraint):
+                        for idx, path in self._gen_docinfo(subpath,
+                                                           level=level+1, restraint=restraint):
                             yield (subpath.name,) + idx, path
                 else:
-                    for idx, path in self._gen_docinfo(subpath, level=level+1, 
-                            restraint=restraint):
+                    for idx, path in self._gen_docinfo(subpath, level=level+1,
+                                                       restraint=restraint):
                         yield (subpath.name,) + idx, path
             else:
                 yield (subpath.stem,), subpath
-
 
     def gen_indices_and_paths(self):
         return self._gen_docinfo()
@@ -185,11 +184,11 @@ class RecursiveDirectoryCorpusDriver(FlatFileCorpusDriver):
     def extract(self, restraint):
         """
         Allows specification of index values to restrict corpus. 'restraint'
-        must be a dictionary of index names and tuples of allowable index 
+        must be a dictionary of index names and tuples of allowable index
         values, i.e. {'index_name':('restraint_value',)}.
         """
-        return utils.lazy_parallel(self.read, 
-            self.gen_indices_and_paths_restrained(restraint=restraint))
+        return qgutils.lazy_parallel(self.read,
+                                     self.gen_indices_and_paths_restrained(restraint=restraint))
 
 
 class NamePatternCorpusDriver(FlatFileCorpusDriver):
