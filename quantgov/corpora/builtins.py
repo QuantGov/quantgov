@@ -3,11 +3,16 @@ quantgov.corpora.builtins: Functions for analyzing a single Document
 """
 import re
 import collections
+import math
 
 import quantgov
 
+from nltk.corpus import wordnet as wn
 from nltk.corpus import stopwords
 from textblob import Word
+from textblob import TextBlob
+
+wn.ensure_loaded()
 
 commands = {}
 
@@ -110,12 +115,12 @@ class ShannonEntropy():
                     'type': re.compile,
                     'default': re.compile(r'\b\w+\b')
                 }
-            )
+            ),
             quantgov.utils.CLIArg(
                 flags=('--stopwords', '-sw'),
                 kwargs={
                     'help': 'stopwords to ignore',
-                    'default': set(stopwords.words('english'))
+                    'default': stopwords.words('english')
                 }
             )
         ]
@@ -136,10 +141,10 @@ class ShannonEntropy():
             if lemma not in stopwords
         ]
         counts = collections.Counter(lemmas)
-        return round(sum(
+        return doc.index + (round(sum(
             -(count / len(lemmas) * math.log(count / len(lemmas), 2))
             for count in counts.values()
-        ), 2)
+        ), 2),)
 
 
 commands['shannon_entropy'] = ShannonEntropy
@@ -151,12 +156,13 @@ class ConditionalCounter():
         help='Conditional Counter',
         arguments=[
             quantgov.utils.CLIArg(
-                flags=('--conditional_pattern', '-cp'),
+                flags=('--pattern'),
                 kwargs={
                     'help': 'regular expression defining a "conditional"',
                     'type': re.compile,
                     'default': re.compile(
-                        r'\b(if|but|except|provided|when|where|whenever|unless|notwithstanding'
+                        r'\b(if|but|except|provided|when|where'
+                        r'|whenever|unless|notwithstanding'
                         r'|in\s+the\s+event|in\s+no\s+event)\b')
                 }
             )
@@ -168,8 +174,9 @@ class ConditionalCounter():
         return ('conditional_count',)
 
     @staticmethod
-    def process_document(doc, conditional_pattern):
-        return len(pattern.findall(' '.join((doc.text).splitlines())))
+    def process_document(doc, pattern):
+        return doc.index + (len(pattern.findall(
+                                ' '.join((doc.text).splitlines()))),)
 
 
 commands['conditional_count'] = ConditionalCounter
@@ -177,39 +184,17 @@ commands['conditional_count'] = ConditionalCounter
 
 class SentenceLength():
 
-    cli = quantgov.utils.CLISpec(
-        help='Sentence Length',
-        arguments=[
-            quantgov.utils.CLIArg(
-                flags=('--word_pattern', '-wp'),
-                kwargs={
-                    'help': 'regular expression defining a "word"',
-                    'type': re.compile,
-                    'default': re.compile(r'\b\w+\b')
-                }
-            )
-            quantgov.utils.CLIArg(
-                flags=('--sentence_pattern', '-sp'),
-                kwargs={
-                    'help': 'regular expression defining a "sentence"',
-                    'type': re.compile,
-                    'default': re.compile(r'[A-Z][^\.!?]*[\.!?]')
-                }
-            )
-        ]
-    )
-
     @staticmethod
     def get_columns(args):
         return ('sentence_length',)
 
     @staticmethod
-    def process_document(doc, word_pattern, sentence_pattern):
-        sentences = sentence_pattern.findall(doc)
+    def process_document(doc):
+        sentences = TextBlob(doc.text).sentences
         total_length = 0
         for sentence in sentences:
-            total_length += len(word_pattern.findall(sentence))
-        return total_length / len(sentences)
+            total_length += len(sentence.words)
+        return doc.index + (round(total_length / len(sentences), 2),)
 
 
 commands['sentence_length'] = SentenceLength
