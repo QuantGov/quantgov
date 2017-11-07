@@ -60,7 +60,11 @@ setup(
         'snakemake',
     ],
     extras_require={
-        'testing': ['pytest-flake8']
+        'testing': ['pytest-flake8'],
+        'complexity': [
+            'textblob',
+            'nltk'
+        ]
     },
     entry_points={
         'console_scripts': [

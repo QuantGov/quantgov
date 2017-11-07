@@ -126,3 +126,25 @@ def test_termcount_multiple_with_label():
          'lorem', 'dolor sit', '--total_label', 'bothofem'],
     )
     assert output == 'file,lorem,dolor sit,bothofem\n1,1,1,2\n2,1,0,1\n'
+
+
+def test_shannon_entropy():
+    output = check_output(
+        ['quantgov', 'corpus', 'shannon_entropy', str(PSEUDO_CORPUS_PATH)],
+    )
+    assert output == 'file,shannon_entropy\n1,7.14\n2,8.13\n'
+
+
+def test_conditionalcount():
+    output = check_output(
+        ['quantgov', 'corpus', 'conditional_count', str(PSEUDO_CORPUS_PATH)],
+    )
+    assert output == 'file,conditional_count\n1,0\n2,0\n'
+
+
+def test_sentencelength():
+    output = check_output(
+        ['quantgov', 'corpus', 'sentence_length', str(PSEUDO_CORPUS_PATH)],
+    )
+    assert output == ('file,sentence_length\n'
+                      '1,9.54\n2,8.16\n')

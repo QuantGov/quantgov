@@ -3,8 +3,16 @@ quantgov.corpora.builtins: Functions for analyzing a single Document
 """
 import re
 import collections
+import math
 
 import quantgov
+
+from nltk.corpus import wordnet as wn
+from nltk.corpus import stopwords
+from textblob import Word
+from textblob import TextBlob
+
+wn.ensure_loaded()
 
 commands = {}
 
@@ -93,3 +101,100 @@ class OccurrenceCounter():
 
 
 commands['count_occurrences'] = OccurrenceCounter
+
+
+class ShannonEntropy():
+
+    cli = quantgov.utils.CLISpec(
+        help='Shannon Entropy',
+        arguments=[
+            quantgov.utils.CLIArg(
+                flags=('--word_pattern', '-wp'),
+                kwargs={
+                    'help': 'regular expression defining a "word"',
+                    'type': re.compile,
+                    'default': re.compile(r'\b\w+\b')
+                }
+            ),
+            quantgov.utils.CLIArg(
+                flags=('--stopwords', '-sw'),
+                kwargs={
+                    'help': 'stopwords to ignore',
+                    'default': stopwords.words('english')
+                }
+            )
+        ]
+
+    )
+
+    @staticmethod
+    def get_columns(args):
+        return ('shannon_entropy',)
+
+    @staticmethod
+    def process_document(doc, word_pattern, stopwords):
+        words = word_pattern.findall(doc.text)
+        lemmas = [
+            lemma for lemma in (
+                Word(word).lemmatize() for word in words
+            )
+            if lemma not in stopwords
+        ]
+        counts = collections.Counter(lemmas)
+        return doc.index + (round(sum(
+            -(count / len(lemmas) * math.log(count / len(lemmas), 2))
+            for count in counts.values()
+        ), 2),)
+
+
+commands['shannon_entropy'] = ShannonEntropy
+
+
+class ConditionalCounter():
+
+    cli = quantgov.utils.CLISpec(
+        help='Conditional Counter',
+        arguments=[
+            quantgov.utils.CLIArg(
+                flags=('--pattern'),
+                kwargs={
+                    'help': 'regular expression defining a "conditional"',
+                    'type': re.compile,
+                    'default': re.compile(
+                        r'\b(if|but|except|provided|when|where'
+                        r'|whenever|unless|notwithstanding'
+                        r'|in\s+the\s+event|in\s+no\s+event)\b')
+                }
+            )
+        ]
+    )
+
+    @staticmethod
+    def get_columns(args):
+        return ('conditional_count',)
+
+    @staticmethod
+    def process_document(doc, pattern):
+        return doc.index + (len(pattern.findall(
+                                ' '.join((doc.text).splitlines()))),)
+
+
+commands['conditional_count'] = ConditionalCounter
+
+
+class SentenceLength():
+
+    @staticmethod
+    def get_columns(args):
+        return ('sentence_length',)
+
+    @staticmethod
+    def process_document(doc):
+        sentences = TextBlob(doc.text).sentences
+        total_length = 0
+        for sentence in sentences:
+            total_length += len(sentence.words)
+        return doc.index + (round(total_length / len(sentences), 2),)
+
+
+commands['sentence_length'] = SentenceLength
