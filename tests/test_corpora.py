@@ -135,11 +135,27 @@ def test_shannon_entropy():
     assert output == 'file,shannon_entropy\n1,7.14\n2,8.13\n'
 
 
+def test_shannon_entropy_no_stopwords():
+    output = check_output(
+        ['quantgov', 'corpus', 'shannon_entropy', str(PSEUDO_CORPUS_PATH),
+         '--stopwords', 'None'],
+    )
+    assert output == 'file,shannon_entropy\n1,7.18\n2,8.09\n'
+
+
+def test_shannon_entropy_4decimals():
+    output = check_output(
+        ['quantgov', 'corpus', 'shannon_entropy', str(PSEUDO_CORPUS_PATH),
+         '--precision', '4'],
+    )
+    assert output == 'file,shannon_entropy\n1,7.1413\n2,8.1252\n'
+
+
 def test_conditionalcount():
     output = check_output(
-        ['quantgov', 'corpus', 'conditional_count', str(PSEUDO_CORPUS_PATH)],
+        ['quantgov', 'corpus', 'count_conditionals', str(PSEUDO_CORPUS_PATH)],
     )
-    assert output == 'file,conditional_count\n1,0\n2,0\n'
+    assert output == 'file,conditionals\n1,0\n2,0\n'
 
 
 def test_sentencelength():
@@ -147,3 +163,11 @@ def test_sentencelength():
         ['quantgov', 'corpus', 'sentence_length', str(PSEUDO_CORPUS_PATH)],
     )
     assert output == 'file,sentence_length\n1,9.54\n2,8.16\n'
+
+
+def test_sentencelength_4decimals():
+    output = check_output(
+        ['quantgov', 'corpus', 'sentence_length', str(PSEUDO_CORPUS_PATH),
+         '--precision', '4'],
+    )
+    assert output == 'file,sentence_length\n1,9.5385\n2,8.1633\n'

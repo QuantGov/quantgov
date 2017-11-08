@@ -148,7 +148,7 @@ class ShannonEntropy():
         return doc.index + (round(sum(
             -(count / len(lemmas) * math.log(count / len(lemmas), 2))
             for count in counts.values()
-        ), precision),)
+        ), int(precision)),)
 
     def lemmatize(word):
         if word in ShannonEntropy.LEMMAS:
@@ -178,7 +178,7 @@ class ConditionalCounter():
 
     @staticmethod
     def get_columns(args):
-        return ('conditional_count',)
+        return ('conditionals',)
 
     @staticmethod
     def process_document(doc):
@@ -186,13 +186,13 @@ class ConditionalCounter():
                                 ' '.join((doc.text).splitlines()))),)
 
 
-commands['conditional_count'] = ConditionalCounter
+commands['count_conditionals'] = ConditionalCounter
 
 
 class SentenceLength():
 
     cli = quantgov.utils.CLISpec(
-        help='Shannon Entropy',
+        help='Sentence Length',
         arguments=[
             quantgov.utils.CLIArg(
                 flags=('--precision'),
@@ -213,7 +213,7 @@ class SentenceLength():
         sentences = textblob.TextBlob(doc.text).sentences
         return doc.index + (round(sum(len(
             sentence.words) for sentence in sentences) /
-            len(sentences), precision),)
+            len(sentences), int(precision)),)
 
 
 commands['sentence_length'] = SentenceLength
