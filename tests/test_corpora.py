@@ -146,5 +146,4 @@ def test_sentencelength():
     output = check_output(
         ['quantgov', 'corpus', 'sentence_length', str(PSEUDO_CORPUS_PATH)],
     )
-    assert output == ('file,sentence_length\n'
-                      '1,9.54\n2,8.16\n')
+    assert output == 'file,sentence_length\n1,9.54\n2,8.16\n'

@@ -61,10 +61,7 @@ setup(
     ],
     extras_require={
         'testing': ['pytest-flake8'],
-        'complexity': [
-            'textblob',
-            'nltk'
-        ]
+        'complexity': ['textblob']
     },
     entry_points={
         'console_scripts': [

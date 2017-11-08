@@ -7,12 +7,10 @@ import math
 
 import quantgov
 
-from nltk.corpus import wordnet as wn
-from nltk.corpus import stopwords
-from textblob import Word
-from textblob import TextBlob
+import nltk.corpus
+import textblob
 
-wn.ensure_loaded()
+nltk.corpus.wordnet.ensure_loaded()
 
 commands = {}
 
@@ -104,7 +102,7 @@ commands['count_occurrences'] = OccurrenceCounter
 
 
 class ShannonEntropy():
-
+    LEMMAS = {}
     cli = quantgov.utils.CLISpec(
         help='Shannon Entropy',
         arguments=[
@@ -120,11 +118,17 @@ class ShannonEntropy():
                 flags=('--stopwords', '-sw'),
                 kwargs={
                     'help': 'stopwords to ignore',
-                    'default': stopwords.words('english')
+                    'default': nltk.corpus.stopwords.words('english')
+                }
+            ),
+            quantgov.utils.CLIArg(
+                flags=('--precision'),
+                kwargs={
+                    'help': 'decimal places to round',
+                    'default': 2
                 }
             )
         ]
-
     )
 
     @staticmethod
@@ -132,11 +136,11 @@ class ShannonEntropy():
         return ('shannon_entropy',)
 
     @staticmethod
-    def process_document(doc, word_pattern, stopwords):
+    def process_document(doc, word_pattern, stopwords, precision):
         words = word_pattern.findall(doc.text)
         lemmas = [
             lemma for lemma in (
-                Word(word).lemmatize() for word in words
+                ShannonEntropy.lemmatize(word) for word in words
             )
             if lemma not in stopwords
         ]
@@ -144,29 +148,32 @@ class ShannonEntropy():
         return doc.index + (round(sum(
             -(count / len(lemmas) * math.log(count / len(lemmas), 2))
             for count in counts.values()
-        ), 2),)
+        ), precision),)
+
+    def lemmatize(word):
+        if word in ShannonEntropy.LEMMAS:
+            lemma = ShannonEntropy.LEMMAS[word]
+        else:
+            lemma = textblob.Word(word).lemmatize()
+            ShannonEntropy.LEMMAS[word] = lemma
+        return lemma
 
 
 commands['shannon_entropy'] = ShannonEntropy
 
 
 class ConditionalCounter():
-
     cli = quantgov.utils.CLISpec(
-        help='Conditional Counter',
-        arguments=[
-            quantgov.utils.CLIArg(
-                flags=('--pattern'),
-                kwargs={
-                    'help': 'regular expression defining a "conditional"',
-                    'type': re.compile,
-                    'default': re.compile(
-                        r'\b(if|but|except|provided|when|where'
-                        r'|whenever|unless|notwithstanding'
-                        r'|in\s+the\s+event|in\s+no\s+event)\b')
-                }
-            )
-        ]
+        help=('Count conditional words and phrases. Included terms are: '
+              ' "if", "but", "except", "provided", "when", "where", '
+              '"whenever", "unless", "notwithstanding", "in the event", '
+              'and "in no event"'),
+        arguments=[]
+    )
+    pattern = re.compile(
+        r'\b(if|but|except|provided|when|where'
+        r'|whenever|unless|notwithstanding'
+        r'|in\s+the\s+event|in\s+no\s+event)\b'
     )
 
     @staticmethod
@@ -174,8 +181,8 @@ class ConditionalCounter():
         return ('conditional_count',)
 
     @staticmethod
-    def process_document(doc, pattern):
-        return doc.index + (len(pattern.findall(
+    def process_document(doc):
+        return doc.index + (len(ConditionalCounter.pattern.findall(
                                 ' '.join((doc.text).splitlines()))),)
 
 
@@ -184,17 +191,29 @@ commands['conditional_count'] = ConditionalCounter
 
 class SentenceLength():
 
+    cli = quantgov.utils.CLISpec(
+        help='Shannon Entropy',
+        arguments=[
+            quantgov.utils.CLIArg(
+                flags=('--precision'),
+                kwargs={
+                    'help': 'decimal places to round',
+                    'default': 2
+                }
+            )
+        ]
+    )
+
     @staticmethod
     def get_columns(args):
         return ('sentence_length',)
 
     @staticmethod
-    def process_document(doc):
-        sentences = TextBlob(doc.text).sentences
-        total_length = 0
-        for sentence in sentences:
-            total_length += len(sentence.words)
-        return doc.index + (round(total_length / len(sentences), 2),)
+    def process_document(doc, precision):
+        sentences = textblob.TextBlob(doc.text).sentences
+        return doc.index + (round(sum(len(
+            sentence.words) for sentence in sentences) /
+            len(sentences), precision),)
 
 
 commands['sentence_length'] = SentenceLength
