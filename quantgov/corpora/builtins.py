@@ -10,6 +10,12 @@ import quantgov
 import nltk.corpus
 import textblob
 
+try:
+    nltk.corpus.wordnet.ensure_loaded()
+except LookupError:
+    nltk.download('wordnet')
+    nltk.corpus.wordnet.ensure_loaded()
+
 commands = {}
 
 
