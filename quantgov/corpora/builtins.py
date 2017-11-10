@@ -7,10 +7,15 @@ import math
 
 import quantgov
 
+import nltk
 import nltk.corpus
 import textblob
 
-nltk.corpus.wordnet.ensure_loaded()
+try:
+    nltk.corpus.wordnet.ensure_loaded()
+except LookupError:
+    nltk.download('wordnet')
+    nltk.corpus.wordnet.ensure_loaded()
 
 commands = {}
 
