@@ -17,6 +17,18 @@ except LookupError:
     nltk.download('wordnet')
     nltk.corpus.wordnet.ensure_loaded()
 
+try:
+    nltk.corpus.stopwords.ensure_loaded()
+except LookupError:
+    nltk.download('stopwords')
+    nltk.corpus.stopwords.ensure_loaded()
+
+try:
+    nltk.corpus.punkt.ensure_loaded()
+except:
+    nltk.download('punkt')
+    nltk.corpus.punkt.ensure_loaded()
+
 commands = {}
 
 
@@ -108,11 +120,6 @@ commands['count_occurrences'] = OccurrenceCounter
 
 class ShannonEntropy():
     LEMMAS = {}
-    try:
-        nltk.corpus.stopwords.ensure_loaded()
-    except LookupError:
-        nltk.download('stopwords')
-        nltk.corpus.stopwords.ensure_loaded()
     cli = quantgov.utils.CLISpec(
         help='Shannon Entropy',
         arguments=[
