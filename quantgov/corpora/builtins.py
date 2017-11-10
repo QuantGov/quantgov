@@ -23,12 +23,6 @@ except LookupError:
     nltk.download('stopwords')
     nltk.corpus.stopwords.ensure_loaded()
 
-try:
-    nltk.tokenize.punkt.ensure_loaded()
-except:
-    nltk.download('punkt')
-    nltk.tokenize.punkt.ensure_loaded()
-
 commands = {}
 
 
