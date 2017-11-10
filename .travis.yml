@@ -5,6 +5,7 @@ python:
 install:
 - pip install ".[testing]"
 - pip install ".[builtins]"
+- python -m nltk.downloader punkt stopwords wordnet
 script: pytest
 deploy:
   provider: pypi
