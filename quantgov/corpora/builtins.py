@@ -7,21 +7,8 @@ import math
 
 import quantgov
 
-import nltk
 import nltk.corpus
 import textblob
-
-try:
-    nltk.corpus.wordnet.ensure_loaded()
-except LookupError:
-    nltk.download('wordnet')
-    nltk.corpus.wordnet.ensure_loaded()
-
-try:
-    nltk.corpus.stopwords.ensure_loaded()
-except LookupError:
-    nltk.download('stopwords')
-    nltk.corpus.stopwords.ensure_loaded()
 
 commands = {}
 
@@ -113,7 +100,7 @@ commands['count_occurrences'] = OccurrenceCounter
 
 
 class ShannonEntropy():
-    LEMMAS = {}
+    lemmas = {}
     cli = quantgov.utils.CLISpec(
         help='Shannon Entropy',
         arguments=[
@@ -162,11 +149,11 @@ class ShannonEntropy():
         ), int(precision)),)
 
     def lemmatize(word):
-        if word in ShannonEntropy.LEMMAS:
-            lemma = ShannonEntropy.LEMMAS[word]
+        if word in ShannonEntropy.lemmas:
+            lemma = ShannonEntropy.lemmas[word]
         else:
             lemma = textblob.Word(word).lemmatize()
-            ShannonEntropy.LEMMAS[word] = lemma
+            ShannonEntropy.lemmas[word] = lemma
         return lemma
 
 
