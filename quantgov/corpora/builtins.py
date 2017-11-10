@@ -24,10 +24,10 @@ except LookupError:
     nltk.corpus.stopwords.ensure_loaded()
 
 try:
-    nltk.corpus.punkt.ensure_loaded()
+    nltk.tokenize.punkt.ensure_loaded()
 except:
     nltk.download('punkt')
-    nltk.corpus.punkt.ensure_loaded()
+    nltk.tokenize.punkt.ensure_loaded()
 
 commands = {}
 
