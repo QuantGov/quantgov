@@ -108,6 +108,11 @@ commands['count_occurrences'] = OccurrenceCounter
 
 class ShannonEntropy():
     LEMMAS = {}
+    try:
+        nltk.corpus.stopwords.ensure_loaded()
+    except LookupError:
+        nltk.download('stopwords')
+        nltk.corpus.stopwords.ensure_loaded()
     cli = quantgov.utils.CLISpec(
         help='Shannon Entropy',
         arguments=[
