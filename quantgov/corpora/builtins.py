@@ -7,14 +7,23 @@ import math
 
 import quantgov
 
-import nltk.corpus
-import textblob
+try:
+    import nltk.corpus
+    NLTK = True
+except ModuleNotFoundError:
+    NLTK = None
 
 try:
-    nltk.corpus.wordnet.ensure_loaded()
-except LookupError:
-    nltk.download('wordnet')
-    nltk.corpus.wordnet.ensure_loaded()
+    import textblob
+except ModuleNotFoundError:
+    textblob = None
+
+if NLTK:
+    try:
+        nltk.corpus.wordnet.ensure_loaded()
+    except LookupError:
+        nltk.download('wordnet')
+        nltk.corpus.wordnet.ensure_loaded()
 
 commands = {}
 
@@ -122,7 +131,7 @@ class ShannonEntropy():
                 flags=('--stopwords', '-sw'),
                 kwargs={
                     'help': 'stopwords to ignore',
-                    'default': nltk.corpus.stopwords.words('english')
+                    'default': nltk.corpus.stopwords.words('english') if NLTK else None
                 }
             ),
             quantgov.utils.CLIArg(
@@ -140,7 +149,10 @@ class ShannonEntropy():
         return ('shannon_entropy',)
 
     @staticmethod
-    def process_document(doc, word_pattern, stopwords, precision):
+    @quantgov.corpora.utils.check_nltk
+    @quantgov.corpora.utils.check_textblob
+    def process_document(doc, word_pattern, precision, stopwords,
+                         textblob=textblob, nltk=NLTK): 
         words = word_pattern.findall(doc.text)
         lemmas = [
             lemma for lemma in (
@@ -213,7 +225,9 @@ class SentenceLength():
         return ('sentence_length',)
 
     @staticmethod
-    def process_document(doc, precision):
+    @quantgov.corpora.utils.check_nltk
+    @quantgov.corpora.utils.check_textblob
+    def process_document(doc, precision, textblob=textblob, nltk=NLTK):
         sentences = textblob.TextBlob(doc.text).sentences
         return doc.index + (round(sum(len(
             sentence.words) for sentence in sentences) /
@@ -253,11 +267,14 @@ class SentimentAnalysis():
             raise NotImplementedError
 
     @staticmethod
-    def process_document(doc, analyzer, precision):
+    @quantgov.corpora.utils.check_nltk
+    @quantgov.corpora.utils.check_textblob
+    def process_document(doc, analyzer, precision,
+                         textblob=textblob, nltk=NLTK):
         if analyzer == 'textblob':
             sentiment = textblob.TextBlob(doc.text)
             return doc.index + (round(sentiment.polarity, int(precision)),
-                round(sentiment.subjectivity, int(precision)),)
+                                round(sentiment.subjectivity, int(precision)),)
 
 
 commands['sentiment_analysis'] = SentimentAnalysis
