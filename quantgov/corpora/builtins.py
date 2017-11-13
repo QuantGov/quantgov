@@ -221,3 +221,43 @@ class SentenceLength():
 
 
 commands['sentence_length'] = SentenceLength
+
+
+class SentimentAnalysis():
+
+    cli = quantgov.utils.CLISpec(
+        help='Performs sentiment analysis on the text',
+        arguments=[
+            quantgov.utils.CLIArg(
+                flags=('--analyzer'),
+                kwargs={
+                    'help': 'which analyzer to use',
+                    'default': 'textblob'
+                }
+            ),
+            quantgov.utils.CLIArg(
+                flags=('--precision'),
+                kwargs={
+                    'help': 'decimal places to round',
+                    'default': 2
+                }
+            )
+        ]
+    )
+
+    @staticmethod
+    def get_columns(args):
+        if args['analyzer'] == 'textblob':
+            return ('sentiment_polarity', 'sentiment_subjectivity',)
+        else:
+            raise NotImplementedError
+
+    @staticmethod
+    def process_document(doc, analyzer, precision):
+        if analyzer == 'textblob':
+            sentiment = textblob.TextBlob(doc.text)
+            return doc.index + (round(sentiment.polarity, int(precision)),
+                round(sentiment.subjectivity, int(precision)),)
+
+
+commands['sentiment_analysis'] = SentimentAnalysis
