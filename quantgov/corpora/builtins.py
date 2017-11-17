@@ -131,7 +131,8 @@ class ShannonEntropy():
                 flags=('--stopwords', '-sw'),
                 kwargs={
                     'help': 'stopwords to ignore',
-                    'default': nltk.corpus.stopwords.words('english') if NLTK else None
+                    'default': (nltk.corpus.stopwords.words('english')
+                                if NLTK else None)
                 }
             ),
             quantgov.utils.CLIArg(
@@ -152,7 +153,7 @@ class ShannonEntropy():
     @quantgov.corpora.utils.check_nltk
     @quantgov.corpora.utils.check_textblob
     def process_document(doc, word_pattern, precision, stopwords,
-                         textblob=textblob, nltk=NLTK): 
+                         textblob=textblob, nltk=NLTK):
         words = word_pattern.findall(doc.text)
         lemmas = [
             lemma for lemma in (
