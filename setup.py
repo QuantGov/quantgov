@@ -63,7 +63,8 @@ setup(
         'testing': ['pytest-flake8'],
         'builtins': [
             'textblob',
-            'nltk'
+            'nltk',
+            'decorator'
         ]
     },
     entry_points={
