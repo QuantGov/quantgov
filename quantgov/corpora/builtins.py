@@ -283,7 +283,7 @@ class SentimentAnalysis():
 
     @staticmethod
     def get_columns(args):
-        if args['analyzer'] == 'textblob':
+        if args['backend'] == 'textblob':
             return ('sentiment_polarity', 'sentiment_subjectivity',)
         else:
             raise NotImplementedError
