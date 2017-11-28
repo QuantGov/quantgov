@@ -5,6 +5,7 @@ import re
 import collections
 import math
 
+from decorator import decorator
 import quantgov
 
 try:
@@ -26,6 +27,20 @@ if NLTK:
         nltk.corpus.wordnet.ensure_loaded()
 
 commands = {}
+
+
+@decorator
+def check_nltk(func, *args, **kwargs):
+    if NLTK is None:
+        raise RuntimeError('Must install NLTK to use {}'.format(func))
+    return func(*args, **kwargs)
+
+
+@decorator
+def check_textblob(func, *args, **kwargs):
+    if textblob is None:
+        raise RuntimeError('Must install textblob to use {}'.format(func))
+    return func(*args, **kwargs)
 
 
 class WordCounter():
@@ -228,11 +243,17 @@ class SentenceLength():
     @staticmethod
     @quantgov.corpora.utils.check_nltk
     @quantgov.corpora.utils.check_textblob
-    def process_document(doc, precision, textblob=textblob, nltk=NLTK):
+    def process_document(doc, precision):
         sentences = textblob.TextBlob(doc.text).sentences
-        return doc.index + (round(sum(len(
-            sentence.words) for sentence in sentences) /
-            len(sentences), int(precision)),)
+        # Allows for rounding to a specified number of decimals
+        if precision:
+            return doc.index + (round(sum(len(
+                sentence.words) for sentence in sentences) /
+                len(sentences), int(precision)),)
+        else:
+            return doc.index + (sum(len(
+                sentence.words) for sentence in sentences) /
+                len(sentences),)
 
 
 commands['sentence_length'] = SentenceLength
@@ -244,9 +265,9 @@ class SentimentAnalysis():
         help='Performs sentiment analysis on the text',
         arguments=[
             quantgov.utils.CLIArg(
-                flags=('--analyzer'),
+                flags=('--backend'),
                 kwargs={
-                    'help': 'which analyzer to use',
+                    'help': 'which program to use for the analysis',
                     'default': 'textblob'
                 }
             ),
@@ -270,12 +291,17 @@ class SentimentAnalysis():
     @staticmethod
     @quantgov.corpora.utils.check_nltk
     @quantgov.corpora.utils.check_textblob
-    def process_document(doc, analyzer, precision,
-                         textblob=textblob, nltk=NLTK):
-        if analyzer == 'textblob':
+    def process_document(doc, backend, precision):
+        if backend == 'textblob':
             sentiment = textblob.TextBlob(doc.text)
-            return doc.index + (round(sentiment.polarity, int(precision)),
-                                round(sentiment.subjectivity, int(precision)),)
+            # Allows for rounding to a specified number of decimals
+            if precision:
+                return (doc.index +
+                        (round(sentiment.polarity, int(precision)),
+                            round(sentiment.subjectivity, int(precision)),))
+            else:
+                return (doc.index +
+                        (sentiment.polarity, sentiment.subjectivity,))
 
 
 commands['sentiment_analysis'] = SentimentAnalysis
