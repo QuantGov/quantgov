@@ -11,12 +11,12 @@ import quantgov
 try:
     import nltk.corpus
     NLTK = True
-except ModuleNotFoundError:
+except ImportError:
     NLTK = None
 
 try:
     import textblob
-except ModuleNotFoundError:
+except ImportError:
     textblob = None
 
 if NLTK:
@@ -165,8 +165,8 @@ class ShannonEntropy():
         return ('shannon_entropy',)
 
     @staticmethod
-    @quantgov.corpora.utils.check_nltk
-    @quantgov.corpora.utils.check_textblob
+    @check_nltk
+    @check_textblob
     def process_document(doc, word_pattern, precision, stopwords,
                          textblob=textblob, nltk=NLTK):
         words = word_pattern.findall(doc.text)
@@ -241,8 +241,8 @@ class SentenceLength():
         return ('sentence_length',)
 
     @staticmethod
-    @quantgov.corpora.utils.check_nltk
-    @quantgov.corpora.utils.check_textblob
+    @check_nltk
+    @check_textblob
     def process_document(doc, precision):
         sentences = textblob.TextBlob(doc.text).sentences
         # Allows for rounding to a specified number of decimals
@@ -289,8 +289,8 @@ class SentimentAnalysis():
             raise NotImplementedError
 
     @staticmethod
-    @quantgov.corpora.utils.check_nltk
-    @quantgov.corpora.utils.check_textblob
+    @check_nltk
+    @check_textblob
     def process_document(doc, backend, precision):
         if backend == 'textblob':
             sentiment = textblob.TextBlob(doc.text)
