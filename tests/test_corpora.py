@@ -171,3 +171,20 @@ def test_sentencelength_4decimals():
          '--precision', '4'],
     )
     assert output == 'file,sentence_length\n1,9.5385\n2,8.1633\n'
+
+
+def test_sentiment_analysis():
+    output = check_output(
+        ['quantgov', 'corpus', 'sentiment_analysis', str(PSEUDO_CORPUS_PATH)],
+    )
+    assert output == ('file,sentiment_polarity,sentiment_subjectivity'
+                      '\n1,0.0,0.0\n2,0.0,0.0\n')
+
+
+def test_sentiment_analysis_4decimals():
+    output = check_output(
+        ['quantgov', 'corpus', 'sentiment_analysis', str(PSEUDO_CORPUS_PATH),
+         '--precision', '4'],
+    )
+    assert output == ('file,sentiment_polarity,sentiment_subjectivity'
+                      '\n1,0.0,0.0\n2,0.0,0.0\n')

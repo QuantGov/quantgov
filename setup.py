@@ -52,6 +52,7 @@ setup(
     packages=find_packages(
         exclude=["*.tests", "*.tests.*", "tests.*", "tests"]),
     install_requires=[
+        'decorator',
         'joblib',
         'pandas',
         'requests',
@@ -61,9 +62,9 @@ setup(
     ],
     extras_require={
         'testing': ['pytest-flake8'],
-        'builtins': [
+        'nlp': [
             'textblob',
-            'nltk'
+            'nltk',
         ]
     },
     entry_points={
