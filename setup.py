@@ -52,6 +52,7 @@ setup(
     packages=find_packages(
         exclude=["*.tests", "*.tests.*", "tests.*", "tests"]),
     install_requires=[
+        'decorator',
         'joblib',
         'pandas',
         'requests',
@@ -60,7 +61,11 @@ setup(
         'snakemake',
     ],
     extras_require={
-        'testing': ['pytest-flake8']
+        'testing': ['pytest-flake8'],
+        'nlp': [
+            'textblob',
+            'nltk',
+        ]
     },
     entry_points={
         'console_scripts': [

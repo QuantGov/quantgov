@@ -3,10 +3,44 @@ quantgov.corpora.builtins: Functions for analyzing a single Document
 """
 import re
 import collections
+import math
 
+from decorator import decorator
 import quantgov
 
+try:
+    import nltk.corpus
+    NLTK = True
+except ImportError:
+    NLTK = None
+
+try:
+    import textblob
+except ImportError:
+    textblob = None
+
+if NLTK:
+    try:
+        nltk.corpus.wordnet.ensure_loaded()
+    except LookupError:
+        nltk.download('wordnet')
+        nltk.corpus.wordnet.ensure_loaded()
+
 commands = {}
+
+
+@decorator
+def check_nltk(func, *args, **kwargs):
+    if NLTK is None:
+        raise RuntimeError('Must install NLTK to use {}'.format(func))
+    return func(*args, **kwargs)
+
+
+@decorator
+def check_textblob(func, *args, **kwargs):
+    if textblob is None:
+        raise RuntimeError('Must install textblob to use {}'.format(func))
+    return func(*args, **kwargs)
 
 
 class WordCounter():
@@ -93,3 +127,181 @@ class OccurrenceCounter():
 
 
 commands['count_occurrences'] = OccurrenceCounter
+
+
+class ShannonEntropy():
+    lemmas = {}
+    cli = quantgov.utils.CLISpec(
+        help='Shannon Entropy',
+        arguments=[
+            quantgov.utils.CLIArg(
+                flags=('--word_pattern', '-wp'),
+                kwargs={
+                    'help': 'regular expression defining a "word"',
+                    'type': re.compile,
+                    'default': re.compile(r'\b\w+\b')
+                }
+            ),
+            quantgov.utils.CLIArg(
+                flags=('--stopwords', '-sw'),
+                kwargs={
+                    'help': 'stopwords to ignore',
+                    'default': (nltk.corpus.stopwords.words('english')
+                                if NLTK else None)
+                }
+            ),
+            quantgov.utils.CLIArg(
+                flags=('--precision'),
+                kwargs={
+                    'help': 'decimal places to round',
+                    'default': 2
+                }
+            )
+        ]
+    )
+
+    @staticmethod
+    def get_columns(args):
+        return ('shannon_entropy',)
+
+    @staticmethod
+    @check_nltk
+    @check_textblob
+    def process_document(doc, word_pattern, precision, stopwords,
+                         textblob=textblob, nltk=NLTK):
+        words = word_pattern.findall(doc.text)
+        lemmas = [
+            lemma for lemma in (
+                ShannonEntropy.lemmatize(word) for word in words
+            )
+            if lemma not in stopwords
+        ]
+        counts = collections.Counter(lemmas)
+        return doc.index + (round(sum(
+            -(count / len(lemmas) * math.log(count / len(lemmas), 2))
+            for count in counts.values()
+        ), int(precision)),)
+
+    def lemmatize(word):
+        if word in ShannonEntropy.lemmas:
+            lemma = ShannonEntropy.lemmas[word]
+        else:
+            lemma = textblob.Word(word).lemmatize()
+            ShannonEntropy.lemmas[word] = lemma
+        return lemma
+
+
+commands['shannon_entropy'] = ShannonEntropy
+
+
+class ConditionalCounter():
+    cli = quantgov.utils.CLISpec(
+        help=('Count conditional words and phrases. Included terms are: '
+              ' "if", "but", "except", "provided", "when", "where", '
+              '"whenever", "unless", "notwithstanding", "in the event", '
+              'and "in no event"'),
+        arguments=[]
+    )
+    pattern = re.compile(
+        r'\b(if|but|except|provided|when|where'
+        r'|whenever|unless|notwithstanding'
+        r'|in\s+the\s+event|in\s+no\s+event)\b'
+    )
+
+    @staticmethod
+    def get_columns(args):
+        return ('conditionals',)
+
+    @staticmethod
+    def process_document(doc):
+        return doc.index + (len(ConditionalCounter.pattern.findall(
+                                ' '.join((doc.text).splitlines()))),)
+
+
+commands['count_conditionals'] = ConditionalCounter
+
+
+class SentenceLength():
+
+    cli = quantgov.utils.CLISpec(
+        help='Sentence Length',
+        arguments=[
+            quantgov.utils.CLIArg(
+                flags=('--precision'),
+                kwargs={
+                    'help': 'decimal places to round',
+                    'default': 2
+                }
+            )
+        ]
+    )
+
+    @staticmethod
+    def get_columns(args):
+        return ('sentence_length',)
+
+    @staticmethod
+    @check_nltk
+    @check_textblob
+    def process_document(doc, precision):
+        sentences = textblob.TextBlob(doc.text).sentences
+        # Allows for rounding to a specified number of decimals
+        if precision:
+            return doc.index + (round(sum(len(
+                sentence.words) for sentence in sentences) /
+                len(sentences), int(precision)),)
+        else:
+            return doc.index + (sum(len(
+                sentence.words) for sentence in sentences) /
+                len(sentences),)
+
+
+commands['sentence_length'] = SentenceLength
+
+
+class SentimentAnalysis():
+
+    cli = quantgov.utils.CLISpec(
+        help='Performs sentiment analysis on the text',
+        arguments=[
+            quantgov.utils.CLIArg(
+                flags=('--backend'),
+                kwargs={
+                    'help': 'which program to use for the analysis',
+                    'default': 'textblob'
+                }
+            ),
+            quantgov.utils.CLIArg(
+                flags=('--precision'),
+                kwargs={
+                    'help': 'decimal places to round',
+                    'default': 2
+                }
+            )
+        ]
+    )
+
+    @staticmethod
+    def get_columns(args):
+        if args['backend'] == 'textblob':
+            return ('sentiment_polarity', 'sentiment_subjectivity',)
+        else:
+            raise NotImplementedError
+
+    @staticmethod
+    @check_nltk
+    @check_textblob
+    def process_document(doc, backend, precision):
+        if backend == 'textblob':
+            sentiment = textblob.TextBlob(doc.text)
+            # Allows for rounding to a specified number of decimals
+            if precision:
+                return (doc.index +
+                        (round(sentiment.polarity, int(precision)),
+                            round(sentiment.subjectivity, int(precision)),))
+            else:
+                return (doc.index +
+                        (sentiment.polarity, sentiment.subjectivity,))
+
+
+commands['sentiment_analysis'] = SentimentAnalysis
