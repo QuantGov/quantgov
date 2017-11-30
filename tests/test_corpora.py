@@ -93,7 +93,7 @@ def test_wordcount():
     output = check_output(
         ['quantgov', 'corpus', 'count_words', str(PSEUDO_CORPUS_PATH)],
     )
-    assert output == 'file,words\n1,248\n2,800\n'
+    assert output == 'file,words\ncfr,349153\nmoby,216645\n'
 
 
 def test_wordcount_pattern():
@@ -101,38 +101,40 @@ def test_wordcount_pattern():
         ['quantgov', 'corpus', 'count_words', str(PSEUDO_CORPUS_PATH),
          '--word_pattern', '\S+']
     )
-    assert output == 'file,words\n1,248\n2,800\n'
+    assert output == 'file,words\ncfr,333237\nmoby,210130\n'
 
 
 def test_termcount():
     output = check_output(
         ['quantgov', 'corpus', 'count_occurrences', str(PSEUDO_CORPUS_PATH),
-         'lorem'],
+         'shall'],
     )
-    assert output == 'file,lorem\n1,1\n2,1\n'
+    assert output == 'file,shall\ncfr,1946\nmoby,94\n'
 
 
 def test_termcount_multiple():
     output = check_output(
         ['quantgov', 'corpus', 'count_occurrences', str(PSEUDO_CORPUS_PATH),
-         'lorem', 'dolor sit'],
+         'shall', 'must', 'may not'],
     )
-    assert output == 'file,lorem,dolor sit\n1,1,1\n2,1,0\n'
+    assert output == ('file,shall,must,may not\n'
+                      'cfr,1946,744,122\nmoby,94,285,5\n')
 
 
 def test_termcount_multiple_with_label():
     output = check_output(
         ['quantgov', 'corpus', 'count_occurrences', str(PSEUDO_CORPUS_PATH),
-         'lorem', 'dolor sit', '--total_label', 'bothofem'],
+         'shall', 'must', 'may not', '--total_label', 'allofthem'],
     )
-    assert output == 'file,lorem,dolor sit,bothofem\n1,1,1,2\n2,1,0,1\n'
+    assert output == ('file,shall,must,may not,allofthem\n'
+                      'cfr,1946,744,122,2812\nmoby,94,285,5,384\n')
 
 
 def test_shannon_entropy():
     output = check_output(
         ['quantgov', 'corpus', 'shannon_entropy', str(PSEUDO_CORPUS_PATH)],
     )
-    assert output == 'file,shannon_entropy\n1,7.14\n2,8.13\n'
+    assert output == 'file,shannon_entropy\ncfr,10.71\nmoby,11.81\n'
 
 
 def test_shannon_entropy_no_stopwords():
@@ -140,7 +142,7 @@ def test_shannon_entropy_no_stopwords():
         ['quantgov', 'corpus', 'shannon_entropy', str(PSEUDO_CORPUS_PATH),
          '--stopwords', 'None'],
     )
-    assert output == 'file,shannon_entropy\n1,7.18\n2,8.09\n'
+    assert output == 'file,shannon_entropy\ncfr,9.52\nmoby,10.03\n'
 
 
 def test_shannon_entropy_4decimals():
@@ -148,21 +150,21 @@ def test_shannon_entropy_4decimals():
         ['quantgov', 'corpus', 'shannon_entropy', str(PSEUDO_CORPUS_PATH),
          '--precision', '4'],
     )
-    assert output == 'file,shannon_entropy\n1,7.1413\n2,8.1252\n'
+    assert output == 'file,shannon_entropy\ncfr,10.7127\nmoby,11.813\n'
 
 
 def test_conditionalcount():
     output = check_output(
         ['quantgov', 'corpus', 'count_conditionals', str(PSEUDO_CORPUS_PATH)],
     )
-    assert output == 'file,conditionals\n1,0\n2,0\n'
+    assert output == 'file,conditionals\ncfr,2132\nmoby,2374\n'
 
 
 def test_sentencelength():
     output = check_output(
         ['quantgov', 'corpus', 'sentence_length', str(PSEUDO_CORPUS_PATH)],
     )
-    assert output == 'file,sentence_length\n1,9.54\n2,8.16\n'
+    assert output == 'file,sentence_length\ncfr,18.68\nmoby,25.09\n'
 
 
 def test_sentencelength_4decimals():
@@ -170,7 +172,7 @@ def test_sentencelength_4decimals():
         ['quantgov', 'corpus', 'sentence_length', str(PSEUDO_CORPUS_PATH),
          '--precision', '4'],
     )
-    assert output == 'file,sentence_length\n1,9.5385\n2,8.1633\n'
+    assert output == 'file,sentence_length\ncfr,18.6827\nmoby,25.0936\n'
 
 
 def test_sentiment_analysis():
@@ -178,7 +180,7 @@ def test_sentiment_analysis():
         ['quantgov', 'corpus', 'sentiment_analysis', str(PSEUDO_CORPUS_PATH)],
     )
     assert output == ('file,sentiment_polarity,sentiment_subjectivity'
-                      '\n1,0.0,0.0\n2,0.0,0.0\n')
+                      '\ncfr,0.01,0.42\nmoby,0.08,0.48\n')
 
 
 def test_sentiment_analysis_4decimals():
@@ -187,4 +189,4 @@ def test_sentiment_analysis_4decimals():
          '--precision', '4'],
     )
     assert output == ('file,sentiment_polarity,sentiment_subjectivity'
-                      '\n1,0.0,0.0\n2,0.0,0.0\n')
+                      '\ncfr,0.0114,0.421\nmoby,0.0816,0.4777\n')
