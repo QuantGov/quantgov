@@ -163,9 +163,9 @@ def run_corpus_builtin(args):
     func_args = {i: j for i, j in vars(args).items()
                  if i not in {'command', 'subcommand', 'outfile', 'corpus'}}
     if args.subcommand == 'check_sanity':
-        args.outfile.write(builtin.write_basic_statistics(func_args))
-        args.outfile.write(builtin.write_extreme_documents(func_args))
-        args.outfile.write(builtin.write_warnings(func_args))
+        args.outfile.write(builtin.create_basic_statistics(func_args))
+        args.outfile.write(builtin.find_extreme_documents(func_args))
+        args.outfile.write(builtin.create_warnings(func_args))
     else:
         driver = quantgov.load_driver(args.corpus)
         writer = csv.writer(args.outfile)

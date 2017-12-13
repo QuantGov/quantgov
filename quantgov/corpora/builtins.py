@@ -333,7 +333,7 @@ class SanityCheck():
     )
 
     @staticmethod
-    def write_basic_statistics(args):
+    def create_basic_statistics(args):
         df = pd.read_csv(args['metadata'])
         results = []
         results.append("BASIC STATISTICS")
@@ -343,7 +343,7 @@ class SanityCheck():
         return '\n'.join(results)
 
     @staticmethod
-    def write_extreme_documents(args):
+    def find_extreme_documents(args):
         df = pd.read_csv(args['metadata'])
         results = []
         results.append("EXTREME DOCUMENTS")
@@ -373,7 +373,7 @@ class SanityCheck():
         return '\n'.join(results)
 
     @staticmethod
-    def write_warnings(args):
+    def create_warnings(args):
         df = pd.read_csv(args['metadata'])
         results = []
         results.append("WARNINGS")
