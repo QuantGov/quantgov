@@ -54,6 +54,7 @@ setup(
     install_requires=[
         'decorator',
         'joblib',
+        'numpy',
         'pandas',
         'requests',
         'scikit-learn',

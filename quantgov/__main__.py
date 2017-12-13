@@ -159,19 +159,24 @@ def start_component(args):
 
 
 def run_corpus_builtin(args):
-    driver = quantgov.load_driver(args.corpus)
-    writer = csv.writer(args.outfile)
     builtin = quantgov.corpora.builtins.commands[args.subcommand]
     func_args = {i: j for i, j in vars(args).items()
                  if i not in {'command', 'subcommand', 'outfile', 'corpus'}}
-    writer.writerow(driver.index_labels + builtin.get_columns(func_args))
-    partial = functools.partial(
-        builtin.process_document,
-        **func_args
-    )
-    for i in quantgov.utils.lazy_parallel(partial, driver.stream()):
-        writer.writerow(i)
-        args.outfile.flush()
+    if args.subcommand == 'check_sanity':
+        args.outfile.write(builtin.write_basic_statistics(func_args))
+        args.outfile.write(builtin.write_extreme_documents(func_args))
+        args.outfile.write(builtin.write_warnings(func_args))
+    else:
+        driver = quantgov.load_driver(args.corpus)
+        writer = csv.writer(args.outfile)
+        writer.writerow(driver.index_labels + builtin.get_columns(func_args))
+        partial = functools.partial(
+            builtin.process_document,
+            **func_args
+        )
+        for i in quantgov.utils.lazy_parallel(partial, driver.stream()):
+            writer.writerow(i)
+            args.outfile.flush()
 
 
 def run_estimator(args):

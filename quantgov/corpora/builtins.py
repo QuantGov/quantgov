@@ -4,6 +4,8 @@ quantgov.corpora.builtins: Functions for analyzing a single Document
 import re
 import collections
 import math
+import numpy as np
+import pandas as pd
 
 from decorator import decorator
 import quantgov
@@ -305,3 +307,91 @@ class SentimentAnalysis():
 
 
 commands['sentiment_analysis'] = SentimentAnalysis
+
+
+class SanityCheck():
+
+    cli = quantgov.utils.CLISpec(
+        help='Performs basic sanity check on corpus metadata',
+        arguments=[
+            quantgov.utils.CLIArg(
+                flags=('--metadata'),
+                kwargs={
+                    'help': 'which file to use as the metadata',
+                    'default': 'data/metadata.csv'
+                }
+            ),
+            quantgov.utils.CLIArg(
+                flags=('--cutoff'),
+                kwargs={
+                    'help': ('proportion of minimum word documents required '
+                             'to raise warning'),
+                    'default': 0.01
+                }
+            )
+        ]
+    )
+
+    @staticmethod
+    def write_basic_statistics(args):
+        df = pd.read_csv(args['metadata'])
+        results = []
+        results.append("BASIC STATISTICS")
+        results.append("Number of documents: {}".format(len(df)))
+        results.append("Total word count: {}".format(df['words'].sum()))
+        results.append("------------------\n")
+        return '\n'.join(results)
+
+    @staticmethod
+    def write_extreme_documents(args):
+        df = pd.read_csv(args['metadata'])
+        results = []
+        results.append("EXTREME DOCUMENTS")
+        # The following code finds the max_words, min_words,
+        # and the locations of those documents.
+        max_words_doc = df[df['words'] == np.max(df.words)]\
+            .iloc[:, 0:SanityCheck.find_last_idx(df)].values.tolist()[0]
+        max_words_doc = 'data/clean/' + \
+            '/'.join([str(x) for x in max_words_doc]) + '.txt'
+        results.append(('Largest document by wordcount: ' +
+                        '{} words, '.format(str(np.max(df.words))) +
+                        'in file {}'.format(max_words_doc)))
+
+        min_words_doc = df[df['words'] == np.min(df.words)]\
+            .iloc[:, 0:SanityCheck.find_last_idx(df)].values.tolist()[0]
+        min_words_doc = 'data/clean/' + \
+            '/'.join([str(x) for x in min_words_doc]) + '.txt'
+        results.append(('Smallest document by wordcount: ' +
+                        '{} words, '.format(str(np.min(df.words))) +
+                        'in file {}'.format(min_words_doc)))
+        min_words_count = len(
+            df[df['words'] == np.min(df.words)])
+
+        results.append(('Number of documents with the minimum wordcount'
+                        ': {}'.format(min_words_count)))
+        results.append("------------------\n")
+        return '\n'.join(results)
+
+    @staticmethod
+    def write_warnings(args):
+        df = pd.read_csv(args['metadata'])
+        results = []
+        results.append("WARNINGS")
+        min_words_count = len(
+            df[df['words'] == np.min(df.words)])
+        if min_words_count > (len(df) * args['cutoff']):
+            results.append((
+                        ">>> WARNING: number of docs with the minimum word"
+                        "count is greater than one percent of total corpus!"
+                        "Check quality!"))
+        else:
+            results.append('No warnings to show!')
+        return '\n'.join(results)
+
+    def find_last_idx(df):
+        for count, column in enumerate(df.columns):
+            if column in ['words', 'wordcount']:
+                return count
+
+
+commands['check_sanity'] = SanityCheck
