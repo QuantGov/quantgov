@@ -188,3 +188,48 @@ def test_sentiment_analysis_4decimals():
     )
     assert output == ('file,sentiment_polarity,sentiment_subjectivity'
                       '\n1,0.0,0.0\n2,0.0,0.0\n')
+
+
+def test_sanity_check():
+    output = check_output(
+        ['quantgov', 'corpus', 'check_sanity', str(PSEUDO_CORPUS_PATH),
+         '--metadata', 'tests/pseudo_corpus/data/metadata.csv']
+    )
+    assert output == ('BASIC STATISTICS\n'
+                      'Number of documents: 2\n'
+                      'Total word count: 1048\n'
+                      '------------------\n'
+                      'EXTREME DOCUMENTS\n'
+                      'Largest document by wordcount: 800 words, '
+                      'in file data/clean/2.txt\n'
+                      'Smallest document by wordcount: 248 words, '
+                      'in file data/clean/1.txt\n'
+                      'Number of documents with the minimum wordcount: 1\n'
+                      '------------------\n'
+                      'WARNINGS\n'
+                      '>>> WARNING: number of docs with the minimum word count '
+                      'is greater than one percent of total corpus! '
+                      'Check quality!'
+    )
+
+
+def test_sanity_check_highcutoff():
+    output = check_output(
+        ['quantgov', 'corpus', 'check_sanity', str(PSEUDO_CORPUS_PATH),
+         '--metadata', 'tests/pseudo_corpus/data/metadata.csv',
+         '--cutoff', '0.51']
+    )
+    assert output == ('BASIC STATISTICS\n'
+                      'Number of documents: 2\n'
+                      'Total word count: 1048\n'
+                      '------------------\n'
+                      'EXTREME DOCUMENTS\n'
+                      'Largest document by wordcount: 800 words, '
+                      'in file data/clean/2.txt\n'
+                      'Smallest document by wordcount: 248 words, '
+                      'in file data/clean/1.txt\n'
+                      'Number of documents with the minimum wordcount: 1\n'
+                      '------------------\n'
+                      'WARNINGS\n'
+                      'No warnings to show!'
+    )

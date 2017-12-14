@@ -379,10 +379,10 @@ class SanityCheck():
         results.append("WARNINGS")
         min_words_count = len(
             df[df['words'] == np.min(df.words)])
-        if min_words_count > (len(df) * args['cutoff']):
+        if min_words_count > (len(df) * float(args['cutoff'])):
             results.append((
-                        ">>> WARNING: number of docs with the minimum word"
-                        "count is greater than one percent of total corpus!"
+                        ">>> WARNING: number of docs with the minimum word "
+                        "count is greater than one percent of total corpus! "
                         "Check quality!"))
         else:
             results.append('No warnings to show!')
