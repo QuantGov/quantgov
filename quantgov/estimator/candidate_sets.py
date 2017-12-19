@@ -17,8 +17,23 @@ import sklearn.linear_model
 import sklearn.multioutput
 import sklearn.pipeline
 import sklearn.feature_extraction
+from decorator import decorator
+from . import structures
+
+try:
+    import gensim
+except ImportError:
+    gensim = None
 
 import quantgov.estimator
+
+
+@decorator
+def check_gensim(func, *args, **kwargs):
+    if gensim is None:
+        raise RuntimeError('Must install gensim to use {}'.format(func))
+    return func(*args, **kwargs)
+
 
 classification = [
     quantgov.estimator.CandidateModel(
@@ -67,5 +82,18 @@ multilabel_classification = [
         parameters={
             'logit__estimator__C': np.logspace(-2, 2, 5)
         }
+    ),
+]
+
+topic_modeling = [
+    quantgov.estimator.CandidateModel(
+        name="LDA",
+        model=sklearn.pipeline.Pipeline(steps=(
+            ('corpus creation', structures.TopicPreprocessor()),
+            ('lda', gensim.sklearn_api.ldamode.LdaTransformer(
+                # id2word=dictionary,
+                passes=1
+            )),
+        )),
     ),
 ]
