@@ -142,7 +142,7 @@ class QGLdaModel(BaseEstimator, TransformerMixin):
         self.corpus = self.create_corpus(driver)
         self.model = gensim.models.ldamodel.LdaModel(self.corpus,
                                                      id2word=self.dictionary,
-                                                     alpha=alpha
+                                                     alpha=alpha,
                                                      eta=eta,
                                                      num_topics=num_topics,
                                                      passes=passes)
