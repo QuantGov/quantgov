@@ -123,14 +123,14 @@ class QGLdaModel(BaseEstimator, TransformerMixin):
         return self.model.transform(driver.stream)
 
     def create_corpus(self, driver):
-        return [self.dictionary.doc2bow([i.group(0)
+        return [self.dictionary.doc2bow([i.group(0).lower()
                 for i in self.word_regex.finditer(doc.text)])
                 for doc in driver.stream()]
 
     @check_gensim
     @check_spacy
     def fit(self, driver, alpha=None, eta=None, num_topics=None, passes=None):
-        self.dictionary = Dictionary([[i.group(0)
+        self.dictionary = Dictionary([[i.group(0).lower()
                                       for i in self.word_regex
                                         .finditer(doc.text)]
                                       for doc in driver.stream()])
