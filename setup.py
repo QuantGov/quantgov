@@ -65,6 +65,10 @@ setup(
         'nlp': [
             'textblob',
             'nltk',
+        ],
+        'topic_modeling': [
+            'gensim',
+            'spacy'
         ]
     },
     entry_points={
