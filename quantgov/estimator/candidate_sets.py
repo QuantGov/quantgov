@@ -88,12 +88,11 @@ multilabel_classification = [
 topic_modeling = [
     quantgov.estimator.CandidateModel(
         name="LDA",
-        model=sklearn.pipeline.Pipeline(steps=(
-            ('corpus creation', structures.TopicPreprocessor()),
-            ('lda', gensim.sklearn_api.ldamode.LdaTransformer(
-                # id2word=dictionary,
-                passes=1
-            )),
-        )),
+        model=structures.QGLdaModel(),
+        parameters={
+            'eta': [0.1, 0.05, 0.01],
+            'passes': [1, 2, 3],
+            'num_topics': [10, 50, 100]
+        }
     ),
 ]
