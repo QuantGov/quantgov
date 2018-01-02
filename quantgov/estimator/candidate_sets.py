@@ -17,22 +17,20 @@ import sklearn.linear_model
 import sklearn.multioutput
 import sklearn.pipeline
 import sklearn.feature_extraction
-from decorator import decorator
 from . import structures
 
 try:
     import gensim
 except ImportError:
     gensim = None
+try:
+    import gensim
+    import spacy
+except ImportError:
+    spacy = None
+    gensim = None
 
 import quantgov.estimator
-
-
-@decorator
-def check_gensim(func, *args, **kwargs):
-    if gensim is None:
-        raise RuntimeError('Must install gensim to use {}'.format(func))
-    return func(*args, **kwargs)
 
 
 classification = [
@@ -85,14 +83,15 @@ multilabel_classification = [
     ),
 ]
 
-topic_modeling = [
-    quantgov.estimator.CandidateModel(
-        name="LDA",
-        model=structures.QGLdaModel(),
-        parameters={
-            'eta': [0.1, 0.05, 0.01],
-            'passes': [1, 2, 3],
-            'num_topics': [10, 50, 100]
-        }
-    ),
-]
+if gensim and spacy:
+    topic_modeling = [
+        quantgov.estimator.CandidateModel(
+            name="LDA",
+            model=structures.QGLdaModel(),
+            parameters={
+                'eta': [0.1, 0.05, 0.01],
+                'passes': [1, 2, 3],
+                'num_topics': [10, 50, 100]
+            }
+        ),
+    ]
