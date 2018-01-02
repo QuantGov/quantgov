@@ -131,7 +131,7 @@ class QGLdaModel(BaseEstimator, TransformerMixin):
                 for i in self.word_regex.finditer(doc.text)])
                 for doc in driver.stream()]
 
-    def fit(self, driver, alpha=None, eta=None, num_topics=None, passes=None):
+    def fit(self, driver, alpha=None, eta=None, num_topics=1, passes=1):
         self.dictionary = Dictionary([[i.group(0).lower()
                                       for i in self.word_regex
                                         .finditer(doc.text)]
