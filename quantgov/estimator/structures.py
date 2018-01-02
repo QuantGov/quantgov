@@ -13,6 +13,7 @@ import re
 try:
     from spacy.lang.en.stop_words import STOP_WORDS
     from gensim.corpora import Dictionary
+    from gensim import sklearn_api
     import gensim
     spacy = True
 except ImportError:
@@ -115,20 +116,21 @@ class CandidateModel(
 
 
 class QGLdaModel(BaseEstimator, TransformerMixin):
+    @check_gensim
+    @check_spacy
     def __init__(self, word_regex=r'\b[A-z]{2,}\b', stop_words=STOP_WORDS):
         self.stop_words = stop_words
         self.word_regex = re.compile(word_regex)
 
     def transform(self, driver):
-        return self.model.transform(driver.stream)
+        self.test_corpus = self.create_corpus(driver)
+        return self.model.transform(self.test_corpus)
 
     def create_corpus(self, driver):
         return [self.dictionary.doc2bow([i.group(0).lower()
                 for i in self.word_regex.finditer(doc.text)])
                 for doc in driver.stream()]
 
-    @check_gensim
-    @check_spacy
     def fit(self, driver, alpha=None, eta=None, num_topics=None, passes=None):
         self.dictionary = Dictionary([[i.group(0).lower()
                                       for i in self.word_regex
@@ -140,10 +142,12 @@ class QGLdaModel(BaseEstimator, TransformerMixin):
                     iteritems(self.dictionary.dfs) if docfreq == 1]
         self.dictionary.filter_tokens(stop_ids + once_ids)
         self.corpus = self.create_corpus(driver)
-        self.model = gensim.models.ldamodel.LdaModel(self.corpus,
-                                                     id2word=self.dictionary,
-                                                     alpha=alpha,
-                                                     eta=eta,
-                                                     num_topics=num_topics,
-                                                     passes=passes)
+        self.model = sklearn_api.ldamodel.LdaTransformer(
+            alpha=alpha,
+            eta=eta,
+            num_topics=num_topics,
+            passes=passes,
+            id2word=self.dictionary
+        )
+        self.model.fit(self.corpus)
         return self
