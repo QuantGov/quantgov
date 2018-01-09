@@ -10,4 +10,4 @@ __all__ = [
 
 from .corpora.utils import load_driver
 
-__version__ = '0.3.1'
+__version__ = '0.3.2'
