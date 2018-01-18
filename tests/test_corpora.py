@@ -201,12 +201,12 @@ def test_sanity_check():
                       '565,798.\n'
                       'The biggest document is cfr.txt, with a word count of '
                       '349,153.\n'
-                      'The smallest document is moby.txt, with a word count of '
-                      '216,645. There are 1 of these documents.\n'
+                      'The smallest document is moby.txt, with a word count '
+                      'of 216,645. There are 1 of these documents.\n'
                       'WARNING: Number of docs with the minimum word '
                       'count is greater than the allowed proportion. '
                       'Check quality.'
-    )
+                      )
 
 
 def test_sanity_check_highcutoff():
@@ -219,7 +219,7 @@ def test_sanity_check_highcutoff():
                       '565,798.\n'
                       'The biggest document is cfr.txt, with a word count of '
                       '349,153.\n'
-                      'The smallest document is moby.txt, with a word count of '
-                      '216,645. There are 1 of these documents.\n'
+                      'The smallest document is moby.txt, with a word count '
+                      'of 216,645. There are 1 of these documents.\n'
                       'No warnings to show.'
-    )
+                      )
