@@ -87,7 +87,7 @@ if gensim and spacy:
     topic_modeling = [
         quantgov.estimator.CandidateModel(
             name="LDA",
-            model=structures.QGLdaModel(),
+            model=structures.GensimLda(),
             parameters={
                 'eta': [0.1, 0.05, 0.01],
                 'passes': [1, 2, 3],

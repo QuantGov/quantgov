@@ -10,7 +10,7 @@ driver = quantgov.load_driver(PSEUDO_CORPUS_PATH)
 
 
 def test_topic_model():
-    sample = quantgov.estimator.structures.QGLdaModel()
+    sample = quantgov.estimator.structures.GensimLda()
     sample.fit(driver, num_topics=2)
     sample.transform(driver)
 

@@ -11,21 +11,15 @@ from decorator import decorator
 import re
 
 try:
-    from spacy.lang.en.stop_words import STOP_WORDS
     from gensim.corpora import Dictionary
     from gensim import sklearn_api
     import gensim
-    spacy = True
 except ImportError:
-    spacy = None
     gensim = None
 
 
-@decorator
-def check_spacy(func, *args, **kwargs):
-    if spacy is None:
-        raise RuntimeError('Must install spacy to use {}'.format(func))
-    return func(*args, **kwargs)
+from sklearn.feature_extraction import stop_words
+STOP_WORDS = stop_words.ENGLISH_STOP_WORDS
 
 
 @decorator
@@ -115,12 +109,11 @@ class CandidateModel(
     pass
 
 
-class QGLdaModel(BaseEstimator, TransformerMixin):
+class GensimLda(BaseEstimator, TransformerMixin):
     @check_gensim
-    @check_spacy
-    def __init__(self, word_regex=r'\b[A-z]{2,}\b', stop_words=STOP_WORDS):
+    def __init__(self, word_pattern=r'\b[A-z]{2,}\b', stop_words=STOP_WORDS):
         self.stop_words = stop_words
-        self.word_regex = re.compile(word_regex)
+        self.word_pattern = re.compile(word_pattern)
 
     def transform(self, driver):
         self.test_corpus = self.create_corpus(driver)
@@ -128,12 +121,12 @@ class QGLdaModel(BaseEstimator, TransformerMixin):
 
     def create_corpus(self, driver):
         return [self.dictionary.doc2bow([i.group(0).lower()
-                for i in self.word_regex.finditer(doc.text)])
+                for i in self.word_pattern.finditer(doc.text)])
                 for doc in driver.stream()]
 
     def fit(self, driver, alpha=None, eta=None, num_topics=1, passes=1):
         self.dictionary = Dictionary([[i.group(0).lower()
-                                      for i in self.word_regex
+                                      for i in self.word_pattern
                                         .finditer(doc.text)]
                                       for doc in driver.stream()])
         stop_ids = [self.dictionary.token2id[stopword] for stopword
