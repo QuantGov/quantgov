@@ -163,9 +163,20 @@ def run_corpus_builtin(args):
     func_args = {i: j for i, j in vars(args).items()
                  if i not in {'command', 'subcommand', 'outfile', 'corpus'}}
     if args.subcommand == 'check_sanity':
-        args.outfile.write(builtin.create_basic_statistics(func_args))
-        args.outfile.write(builtin.find_extreme_documents(func_args))
-        args.outfile.write(builtin.create_warnings(func_args))
+        args.outfile.write('There are {:,} documents, for a total word '
+                           'count of {:,}.\n\n'.format(
+                            *builtin.create_basic_statistics(func_args)))
+        args.outfile.write('The biggest document is {}, with a word count of '
+                           '{:,}.\n\nThe smallest document is {}, with a '
+                           'word count of {:,}. There are {:,} of these '
+                           'documents.\n\n'.format(
+                            *builtin.find_extreme_documents(func_args)))
+        if builtin.raise_warning(func_args):
+            args.outfile.write('WARNING: Number of docs with the minimum word '
+                               'count is greater than the allowed proportion. '
+                               'Check quality.')
+        else:
+            args.outfile.write('No warnings to show.')
     else:
         driver = quantgov.load_driver(args.corpus)
         writer = csv.writer(args.outfile)

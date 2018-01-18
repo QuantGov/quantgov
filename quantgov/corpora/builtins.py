@@ -335,62 +335,38 @@ class SanityCheck():
     @staticmethod
     def create_basic_statistics(args):
         df = pd.read_csv(args['metadata'])
-        results = []
-        results.append("BASIC STATISTICS")
-        results.append("Number of documents: {}".format(len(df)))
-        results.append("Total word count: {}".format(df['words'].sum()))
-        results.append("------------------\n")
-        return '\n'.join(results)
+        no_documents = len(df)
+        total_words = df.words.sum()
+        return no_documents, total_words
 
     @staticmethod
     def find_extreme_documents(args):
         df = pd.read_csv(args['metadata'])
-        results = []
-        results.append("EXTREME DOCUMENTS")
         # The following code finds the max_words, min_words,
         # and the locations of those documents.
-        max_words_doc = df[df['words'] == np.max(df.words)]\
+        max_words_doc = df[df.words == np.max(df.words)]\
             .iloc[:, 0:SanityCheck.find_last_idx(df)].values.tolist()[0]
-        max_words_doc = 'data/clean/' + \
-            '/'.join([str(x) for x in max_words_doc]) + '.txt'
-        results.append(('Largest document by wordcount: ' +
-                        '{} words, '.format(str(np.max(df.words))) +
-                        'in file {}'.format(max_words_doc)))
+        max_words_doc = '/'.join(str(i) for i in max_words_doc) + '.txt'
+        max_words = np.max(df.words)
 
-        min_words_doc = df[df['words'] == np.min(df.words)]\
+        min_words_doc = df[df.words == np.min(df.words)]\
             .iloc[:, 0:SanityCheck.find_last_idx(df)].values.tolist()[0]
-        min_words_doc = 'data/clean/' + \
-            '/'.join([str(x) for x in min_words_doc]) + '.txt'
-        results.append(('Smallest document by wordcount: ' +
-                        '{} words, '.format(str(np.min(df.words))) +
-                        'in file {}'.format(min_words_doc)))
-        min_words_count = len(
-            df[df['words'] == np.min(df.words)])
+        min_words_doc = '/'.join(str(i) for i in min_words_doc) + '.txt'
+        min_words = np.min(df.words)
+        min_words_count = len(df[df.words == np.min(df.words)])
 
-        results.append(('Number of documents with the minimum wordcount'
-                        ': {}'.format(min_words_count)))
-        results.append("------------------\n")
-        return '\n'.join(results)
+        return (max_words_doc, max_words,
+                min_words_doc, min_words, min_words_count)
 
     @staticmethod
-    def create_warnings(args):
+    def raise_warning(args):
         df = pd.read_csv(args['metadata'])
-        results = []
-        results.append("WARNINGS")
-        min_words_count = len(
-            df[df['words'] == np.min(df.words)])
-        if min_words_count > (len(df) * float(args['cutoff'])):
-            results.append((
-                        ">>> WARNING: number of docs with the minimum word "
-                        "count is greater than one percent of total corpus! "
-                        "Check quality!"))
-        else:
-            results.append('No warnings to show!')
-        return '\n'.join(results)
+        min_words_count = len(df[df.words == np.min(df.words)])
+        return (min_words_count > (len(df) * float(args['cutoff'])))
 
     def find_last_idx(df):
         for count, column in enumerate(df.columns):
-            if column in ['words', 'wordcount']:
+            if column == 'words':
                 return count
 
 

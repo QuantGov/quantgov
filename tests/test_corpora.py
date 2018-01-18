@@ -195,21 +195,13 @@ def test_sanity_check():
         ['quantgov', 'corpus', 'check_sanity', str(PSEUDO_CORPUS_PATH),
          '--metadata', 'tests/pseudo_corpus/data/metadata.csv']
     )
-    assert output == ('BASIC STATISTICS\n'
-                      'Number of documents: 2\n'
-                      'Total word count: 1048\n'
-                      '------------------\n'
-                      'EXTREME DOCUMENTS\n'
-                      'Largest document by wordcount: 800 words, '
-                      'in file data/clean/2.txt\n'
-                      'Smallest document by wordcount: 248 words, '
-                      'in file data/clean/1.txt\n'
-                      'Number of documents with the minimum wordcount: 1\n'
-                      '------------------\n'
-                      'WARNINGS\n'
-                      '>>> WARNING: number of docs with the minimum word count '
-                      'is greater than one percent of total corpus! '
-                      'Check quality!'
+    assert output == ('There are 2 documents, for a total word count of 1,048.\n'
+                      'The biggest document is 2.txt, with a word count of 800.\n'
+                      'The smallest document is 1.txt, with a word count of '
+                      '248. There are 1 of these documents.\n'
+                      'WARNING: Number of docs with the minimum word '
+                      'count is greater than the allowed proportion. '
+                      'Check quality.'
     )
 
 
@@ -219,17 +211,9 @@ def test_sanity_check_highcutoff():
          '--metadata', 'tests/pseudo_corpus/data/metadata.csv',
          '--cutoff', '0.51']
     )
-    assert output == ('BASIC STATISTICS\n'
-                      'Number of documents: 2\n'
-                      'Total word count: 1048\n'
-                      '------------------\n'
-                      'EXTREME DOCUMENTS\n'
-                      'Largest document by wordcount: 800 words, '
-                      'in file data/clean/2.txt\n'
-                      'Smallest document by wordcount: 248 words, '
-                      'in file data/clean/1.txt\n'
-                      'Number of documents with the minimum wordcount: 1\n'
-                      '------------------\n'
-                      'WARNINGS\n'
-                      'No warnings to show!'
+    assert output == ('There are 2 documents, for a total word count of 1,048.\n'
+                      'The biggest document is 2.txt, with a word count of 800.\n'
+                      'The smallest document is 1.txt, with a word count of '
+                      '248. There are 1 of these documents.\n'
+                      'No warnings to show.'
     )
