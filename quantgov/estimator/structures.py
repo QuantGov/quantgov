@@ -127,13 +127,12 @@ class GensimLda(BaseEstimator, TransformerMixin):
     def fit(self, driver, alpha=None, eta=None, num_topics=1, passes=1):
         self.dictionary = Dictionary([[i.group(0).lower()
                                       for i in self.word_pattern
-                                        .finditer(doc.text)]
+                                        .finditer(doc.text)
+                                       if i not in self.stop_words]
                                       for doc in driver.stream()])
-        stop_ids = [self.dictionary.token2id[stopword] for stopword
-                    in self.stop_words if stopword in self.dictionary.token2id]
         once_ids = [tokenid for tokenid, docfreq in
                     iteritems(self.dictionary.dfs) if docfreq == 1]
-        self.dictionary.filter_tokens(stop_ids + once_ids)
+        self.dictionary.filter_tokens(once_ids)
         self.corpus = self.create_corpus(driver)
         self.model = sklearn_api.ldamodel.LdaTransformer(
             alpha=alpha,
