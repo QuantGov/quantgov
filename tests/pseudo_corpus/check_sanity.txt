@@ -1,0 +1,7 @@
+There are 2 documents, for a total word count of 565,798.
+
+The biggest document is cfr.txt, with a word count of 349,153.
+
+The smallest document is moby.txt, with a word count of 216,645. There are 1 of these documents.
+
+WARNING: Number of docs with the minimum word count is greater than the allowed proportion. Check quality.
