@@ -344,14 +344,14 @@ class SanityCheck():
         df = pd.read_csv(args['metadata'])
         # The following code finds the max_words, min_words,
         # and the locations of those documents.
-        max_words_doc = df[df.words == np.max(df.words)]\
-            .iloc[:, 0:SanityCheck.find_last_idx(df)].values.tolist()[0]
-        max_words_doc = '/'.join(str(i) for i in max_words_doc) + '.txt'
+        max_words_doc = (df[df.words == np.max(df.words)]
+            .iloc[:, 0:SanityCheck.find_last_idx(df)].values.tolist()[0])
+        max_words_doc = ','.join(str(i) for i in max_words_doc)
         max_words = np.max(df.words)
 
-        min_words_doc = df[df.words == np.min(df.words)]\
-            .iloc[:, 0:SanityCheck.find_last_idx(df)].values.tolist()[0]
-        min_words_doc = '/'.join(str(i) for i in min_words_doc) + '.txt'
+        min_words_doc = (df[df.words == np.min(df.words)]
+            .iloc[:, 0:SanityCheck.find_last_idx(df)].values.tolist()[0])
+        min_words_doc = ','.join(str(i) for i in min_words_doc)
         min_words = np.min(df.words)
         min_words_count = len(df[df.words == np.min(df.words)])
 
