@@ -194,32 +194,45 @@ def test_sentiment_analysis_4decimals():
 
 def test_sanity_check():
     output = check_output(
-        ['quantgov', 'corpus', 'check_sanity', str(PSEUDO_CORPUS_PATH),
-         '--metadata', 'tests/pseudo_corpus/data/metadata.csv']
+        ['quantgov', 'corpus', 'check_sanity', str(PSEUDO_CORPUS_PATH)]
     )
-    assert output == ('There are 2 documents, for a total word count of '
-                      '565,798.\n'
-                      'The biggest document is cfr.txt, with a word count of '
-                      '349,153.\n'
-                      'The smallest document is moby.txt, with a word count '
-                      'of 216,645. There are 1 of these documents.\n'
-                      'WARNING: Number of docs with the minimum word '
-                      'count is greater than the allowed proportion. '
-                      'Check quality.'
+    assert output == ('Document count: 2\nTotal words: 565,798\n'
+                      'Document with highest count of words:\n\tfile: cfr\n'
+                      'This document has 349,153 words.\nDocument with '
+                      'lowest count of words:\n\tfile: moby\nThis document has '
+                      '216,645 words.\nNumber of documents with smallest '
+                      'count of words: 1\n'
+                      'WARNING: Proportion of documents with smallest count '
+                      'of words is greater\nthan 0.01. Check quality.'
                       )
 
 
 def test_sanity_check_highcutoff():
     output = check_output(
         ['quantgov', 'corpus', 'check_sanity', str(PSEUDO_CORPUS_PATH),
-         '--metadata', 'tests/pseudo_corpus/data/metadata.csv',
          '--cutoff', '0.51']
     )
-    assert output == ('There are 2 documents, for a total word count of '
-                      '565,798.\n'
-                      'The biggest document is cfr.txt, with a word count of '
-                      '349,153.\n'
-                      'The smallest document is moby.txt, with a word count '
-                      'of 216,645. There are 1 of these documents.\n'
+    assert output == ('Document count: 2\nTotal words: 565,798\n'
+                      'Document with highest count of words:\n\tfile: cfr\n'
+                      'This document has 349,153 words.\nDocument with '
+                      'lowest count of words:\n\tfile: moby\nThis document has '
+                      '216,645 words.\nNumber of documents with smallest '
+                      'count of words: 1\n'
                       'No warnings to show.'
+                      )
+
+
+def test_sanity_check_restrictions():
+    output = check_output(
+        ['quantgov', 'corpus', 'check_sanity', str(PSEUDO_CORPUS_PATH),
+         '--metric', 'restrictions']
+    )
+    assert output == ('Document count: 2\nTotal restrictions: 3,788\n'
+                      'Document with highest count of restrictions:\n\tfile: '
+                      'cfr\nThis document has 3,402 restrictions.\nDocument '
+                      'with lowest count of restrictions:\n\tfile: moby\nThis '
+                      'document has 386 restrictions.\nNumber of documents '
+                      'with smallest count of restrictions: 1\n'
+                      'WARNING: Proportion of documents with smallest count '
+                      'of restrictions is greater\nthan 0.01. Check quality.'
                       )

@@ -1,0 +1,14 @@
+Document count: 2
+Total restrictions: 3,788
+
+Document with highest count of restrictions:
+	file: cfr
+This document has 3,402 restrictions.
+
+Document with lowest count of restrictions:
+	file: moby
+This document has 386 restrictions.
+Number of documents with smallest of count of restrictions: 1
+
+WARNING: Proportion of documents with smallest count of restrictions is greater
+than 0.01. Check quality.

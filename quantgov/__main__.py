@@ -172,7 +172,7 @@ def run_corpus_builtin(args):
         args.outfile.write('Document with highest count of {0}:\n\t{1}\n'
                            'This document has {2:,} {0}.\n\nDocument with '
                            'lowest count of {0}:\n\t{3}\nThis document has '
-                           '{4:,} {0}.\nNumber of documents with smallest of '
+                           '{4:,} {0}.\nNumber of documents with smallest '
                            'count of {0}: {5:,}\n\n'.format(
                             *builtin.find_extreme_documents(corpus, func_args))
                            )
