@@ -163,18 +163,24 @@ def run_corpus_builtin(args):
     func_args = {i: j for i, j in vars(args).items()
                  if i not in {'command', 'subcommand', 'outfile', 'corpus'}}
     if args.subcommand == 'check_sanity':
-        args.outfile.write('There are {:,} documents, for a total word '
-                           'count of {:,}.\n\n'.format(
-                            *builtin.create_basic_statistics(func_args)))
-        args.outfile.write('The biggest document is {}, with a word count of '
-                           '{:,}.\n\nThe smallest document is {}, with a '
-                           'word count of {:,}. There are {:,} of these '
-                           'documents.\n\n'.format(
-                            *builtin.find_extreme_documents(func_args)))
-        if builtin.raise_warning(func_args):
-            args.outfile.write('WARNING: Number of docs with the minimum word '
-                               'count is greater than the allowed proportion. '
-                               'Check quality.')
+        corpus = Path(args.corpus)
+        if not corpus.is_dir():
+            corpus = corpus.parent
+        args.outfile.write('Document count: {1:,}\nTotal {0}: {2:,}\n\n'.format(
+                            *builtin.create_basic_statistics(corpus, func_args))
+                           )
+        args.outfile.write('Document with highest count of {0}:\n\t{1}\n'
+                           'This document has {2:,} {0}.\n\nDocument with '
+                           'lowest count of {0}:\n\t{3}\nThis document has '
+                           '{4:,} {0}.\nNumber of documents with smallest of '
+                           'count of {0}: {5:,}\n\n'.format(
+                            *builtin.find_extreme_documents(corpus, func_args))
+                           )
+        if builtin.raise_warning(corpus, func_args)[0]:
+            args.outfile.write('WARNING: Proportion of documents with '
+                               'smallest count of {1} is greater\nthan {2}. '
+                               'Check quality.'.format(
+                                *builtin.raise_warning(corpus, func_args)))
         else:
             args.outfile.write('No warnings to show.')
     else:

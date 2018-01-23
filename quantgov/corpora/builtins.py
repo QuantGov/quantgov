@@ -315,10 +315,10 @@ class SanityCheck():
         help='Performs basic sanity check on corpus metadata',
         arguments=[
             quantgov.utils.CLIArg(
-                flags=('--metadata'),
+                flags=('--metric'),
                 kwargs={
-                    'help': 'which file to use as the metadata',
-                    'default': 'data/metadata.csv'
+                    'help': 'which metric to use to find extreme documents',
+                    'default': 'words'
                 }
             ),
             quantgov.utils.CLIArg(
@@ -333,41 +333,44 @@ class SanityCheck():
     )
 
     @staticmethod
-    def create_basic_statistics(args):
-        df = pd.read_csv(args['metadata'])
+    def create_basic_statistics(corpus, args):
+        df = pd.read_csv(corpus.joinpath('data', 'metadata.csv'))
         no_documents = len(df)
-        total_words = df.words.sum()
-        return no_documents, total_words
+        total_metric = df[args['metric']].sum()
+        return args['metric'], no_documents, total_metric
 
     @staticmethod
-    def find_extreme_documents(args):
-        df = pd.read_csv(args['metadata'])
+    def find_extreme_documents(corpus, args):
+        driver = quantgov.load_driver(corpus)
+        df = pd.read_csv(corpus.joinpath('data', 'metadata.csv'))
+        metric_col = df[args['metric']]
         # The following code finds the max_words, min_words,
         # and the locations of those documents.
-        max_words_doc = (df[df.words == np.max(df.words)]
-            .iloc[:, 0:SanityCheck.find_last_idx(df)].values.tolist()[0])
-        max_words_doc = ','.join(str(i) for i in max_words_doc)
-        max_words = np.max(df.words)
+        max_words_doc = ((df[metric_col == np.max(metric_col)]
+                        [list(driver.index_labels)])
+                        .values.tolist()[0])
+        max_words_doc = '\n\t'.join(str(i) + ': ' + str(j) for i, j in zip(
+                               list(driver.index_labels), max_words_doc))
+        max_words = np.max(metric_col)
 
-        min_words_doc = (df[df.words == np.min(df.words)]
-            .iloc[:, 0:SanityCheck.find_last_idx(df)].values.tolist()[0])
-        min_words_doc = ','.join(str(i) for i in min_words_doc)
-        min_words = np.min(df.words)
-        min_words_count = len(df[df.words == np.min(df.words)])
+        min_words_doc = ((df[metric_col == np.min(metric_col)]
+                        [list(driver.index_labels)])
+                        .values.tolist()[0])
+        min_words_doc = '\n\t'.join(str(i) + ': ' + str(j) for i, j in zip(
+                               list(driver.index_labels), min_words_doc))
+        min_words = np.min(metric_col)
+        min_words_count = len(df[metric_col == np.min(metric_col)])
 
-        return (max_words_doc, max_words,
-                min_words_doc, min_words, min_words_count)
+        return (args['metric'], max_words_doc, max_words, 
+                min_words_doc, min_words, min_words_count,)
 
     @staticmethod
-    def raise_warning(args):
-        df = pd.read_csv(args['metadata'])
-        min_words_count = len(df[df.words == np.min(df.words)])
-        return (min_words_count > (len(df) * float(args['cutoff'])))
-
-    def find_last_idx(df):
-        for count, column in enumerate(df.columns):
-            if column == 'words':
-                return count
+    def raise_warning(corpus, args):
+        df = pd.read_csv(corpus.joinpath('data', 'metadata.csv'))
+        metric_col = df[args['metric']]
+        min_words_count = len(df[metric_col == np.min(metric_col)])
+        return ((min_words_count > (len(df) * float(args['cutoff']))),
+                args['metric'], args['cutoff'])
 
 
 commands['check_sanity'] = SanityCheck
