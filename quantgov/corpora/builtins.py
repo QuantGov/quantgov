@@ -347,21 +347,21 @@ class SanityCheck():
         # The following code finds the max_words, min_words,
         # and the locations of those documents.
         max_words_doc = ((df[metric_col == np.max(metric_col)]
-                        [list(driver.index_labels)])
-                        .values.tolist()[0])
+                         [list(driver.index_labels)])
+                         .values.tolist()[0])
         max_words_doc = '\n\t'.join(str(i) + ': ' + str(j) for i, j in zip(
                                list(driver.index_labels), max_words_doc))
         max_words = np.max(metric_col)
 
         min_words_doc = ((df[metric_col == np.min(metric_col)]
-                        [list(driver.index_labels)])
-                        .values.tolist()[0])
+                         [list(driver.index_labels)])
+                         .values.tolist()[0])
         min_words_doc = '\n\t'.join(str(i) + ': ' + str(j) for i, j in zip(
                                list(driver.index_labels), min_words_doc))
         min_words = np.min(metric_col)
         min_words_count = len(df[metric_col == np.min(metric_col)])
 
-        return (args['metric'], max_words_doc, max_words, 
+        return (args['metric'], max_words_doc, max_words,
                 min_words_doc, min_words, min_words_count,)
 
     @staticmethod
