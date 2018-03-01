@@ -85,7 +85,7 @@ def estimate_probability_multilabel(vectorizer, model, streamer):
             list(int(i) for i in label_classes).index(1)
             for label_classes in model.model.classes_
         )
-    except AttributeError:
+    except (AttributeError, TypeError):
         truecols = tuple(
             list(int(i) for i in label_classes).index(1)
             for label_classes in (
@@ -93,9 +93,13 @@ def estimate_probability_multilabel(vectorizer, model, streamer):
             )
         )
     predicted = pipeline.predict_proba(texts)
-    for i, docidx in enumerate(streamer.index):
-        yield docidx, tuple(label_predictions[i, truecols[j]]
-                            for j, label_predictions in enumerate(predicted))
+    try:
+        for i, docidx in enumerate(streamer.index):
+            yield docidx, tuple(
+                label_predictions[i, truecols[j]]
+                for j, label_predictions in enumerate(predicted))
+    except IndexError:
+        yield from zip(streamer.index, predicted)
 
 
 def estimate_probability_multiclass(vectorizer, model, streamer):
@@ -166,7 +170,7 @@ def estimate(vectorizer, model, corpus, probability, outfile):
         multilabel = True
         try:
             multiclass = any(is_multiclass(i) for i in model.model.classes_)
-        except AttributeError:
+        except (AttributeError, TypeError):
             multiclass = any(
                 is_multiclass(i.classes_) for i in
                 model.model.steps[-1][-1].estimators_
