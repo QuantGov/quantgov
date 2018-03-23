@@ -5,7 +5,7 @@ import pandas as pd
 
 try:
     from sklearn.model_selection import KFold, GridSearchCV
-except ImportError: # sklearn 0.17
+except ImportError:  # sklearn 0.17
     from sklearn.cross_validation import KFold
     from sklearn.grid_search import GridSearchCV
 
