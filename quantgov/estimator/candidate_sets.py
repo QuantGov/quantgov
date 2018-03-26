@@ -17,8 +17,21 @@ import sklearn.linear_model
 import sklearn.multioutput
 import sklearn.pipeline
 import sklearn.feature_extraction
+from . import structures
+
+try:
+    import gensim
+except ImportError:
+    gensim = None
+try:
+    import gensim
+    import spacy
+except ImportError:
+    spacy = None
+    gensim = None
 
 import quantgov.estimator
+
 
 classification = [
     quantgov.estimator.CandidateModel(
@@ -69,3 +82,16 @@ multilabel_classification = [
         }
     ),
 ]
+
+if gensim and spacy:
+    topic_modeling = [
+        quantgov.estimator.CandidateModel(
+            name="LDA",
+            model=structures.GensimLda(),
+            parameters={
+                'eta': [0.1, 0.05, 0.01],
+                'passes': [1, 2, 3],
+                'num_topics': [10, 50, 100]
+            }
+        ),
+    ]

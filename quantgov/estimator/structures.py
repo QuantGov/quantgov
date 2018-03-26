@@ -5,6 +5,28 @@ Useful structures for evaluating and training estimators
 """
 import collections
 import joblib as jl
+from sklearn.base import BaseEstimator, TransformerMixin
+from six import iteritems
+from decorator import decorator
+import re
+
+try:
+    from gensim.corpora import Dictionary
+    from gensim import sklearn_api
+    import gensim
+except ImportError:
+    gensim = None
+
+
+from sklearn.feature_extraction import stop_words
+STOP_WORDS = stop_words.ENGLISH_STOP_WORDS
+
+
+@decorator
+def check_gensim(func, *args, **kwargs):
+    if gensim is None:
+        raise RuntimeError('Must install gensim to use {}'.format(func))
+    return func(*args, **kwargs)
 
 
 class _PersistanceMixin(object):
@@ -85,3 +107,50 @@ class CandidateModel(
             parameter values to test as values
     """
     pass
+
+
+class GensimLda(BaseEstimator, TransformerMixin):
+    @check_gensim
+    def __init__(self, word_pattern=r'\b[A-z]{2,}\b', stop_words='en'):
+        if stop_words == 'en':
+            self.stop_words = STOP_WORDS
+        elif not stop_words:
+            self.stop_words = None
+        else:
+            self.stop_words = stop_words
+
+        self.word_pattern = re.compile(word_pattern)
+
+    def transform(self, driver):
+        self.test_corpus = self.create_corpus(driver)
+        return self.model.transform(self.test_corpus)
+
+    def create_corpus(self, driver):
+        return [self.dictionary.doc2bow([i.group(0).lower()
+                for i in self.word_pattern.finditer(doc.text)])
+                for doc in driver.stream()]
+
+    def show_topics(self):
+        return self.model.gensim_model.show_topics()
+
+    def fit(self, driver, alpha=None, eta=None, num_topics=1,
+            passes=1, min_wf=1):
+        self.dictionary = Dictionary([[i.group(0).lower()
+                                      for i in self.word_pattern
+                                        .finditer(doc.text)]
+                                      for doc in driver.stream()])
+        stop_ids = [self.dictionary.token2id[stopword] for stopword
+                    in self.stop_words if stopword in self.dictionary.token2id]
+        once_ids = [tokenid for tokenid, docfreq in
+                    iteritems(self.dictionary.dfs) if docfreq <= min_wf]
+        self.dictionary.filter_tokens(stop_ids + once_ids)
+        self.corpus = self.create_corpus(driver)
+        self.model = sklearn_api.ldamodel.LdaTransformer(
+            alpha=alpha,
+            eta=eta,
+            num_topics=num_topics,
+            passes=passes,
+            id2word=self.dictionary
+        )
+        self.model.fit(self.corpus)
+        return self
