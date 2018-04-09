@@ -1,5 +1,5 @@
 import pytest
-import quantgov.corpora
+import quantgov.corpus
 import subprocess
 
 from pathlib import Path
@@ -8,7 +8,7 @@ from pathlib import Path
 def build_recursive_directory_corpus(directory):
     for path, text in (('a/1.txt', u'foo'), ('b/2.txt', u'bar')):
         directory.join(path).write_text(text, encoding='utf-8', ensure=True)
-    return quantgov.corpora.RecursiveDirectoryCorpusDriver(
+    return quantgov.corpus.RecursiveDirectoryCorpusDriver(
         directory=str(directory), index_labels=('letter', 'number'))
 
 
@@ -16,7 +16,7 @@ def build_name_pattern_corpus(directory):
     for path, text in (('a_1.txt', u'foo'), ('b_2.txt', u'bar')):
         path = directory.join(path).write_text(
             text, encoding='utf-8', ensure=True)
-    return quantgov.corpora.NamePatternCorpusDriver(
+    return quantgov.corpus.NamePatternCorpusDriver(
         pattern=r'(?P<letter>[a-z])_(?P<number>\d)',
         directory=str(directory)
     )
@@ -35,7 +35,7 @@ def build_index_corpus(directory):
     with index_path.open('w', encoding='utf-8') as outf:
         outf.write(u'letter,number,path\n')
         outf.write(u'\n'.join(','.join(row) for row in rows))
-    return quantgov.corpora.IndexDriver(str(index_path))
+    return quantgov.corpus.IndexDriver(str(index_path))
 
 
 BUILDERS = {
