@@ -95,7 +95,7 @@ def estimate_probability_multilabel(vectorizer, model, streamer, precision):
         )
     predicted = pipeline.predict_proba(texts)
     for i, docidx in enumerate(streamer.index):
-        yield docidx, tuple((round(label_predictions[i, truecols[j]],
+        yield docidx, tuple((label_predictions[i, truecols[j]].round(
             int(precision))) for j, label_predictions in enumerate(predicted))
 
 
@@ -115,10 +115,11 @@ def estimate_probability_multiclass(vectorizer, model, streamer, precision):
     pipeline = get_pipeline(vectorizer, model)
     texts = (doc.text for doc in streamer)
     yield from zip(streamer.index,
-        (round(i, int(precision)) for i in pipeline.predict_proba(texts)))
+        (i.round(int(precision)) for i in pipeline.predict_proba(texts)))
 
 
-def estimate_probability_multilabel_multiclass(vectorizer, model, streamer, precision):
+def estimate_probability_multilabel_multiclass(
+        vectorizer, model, streamer, precision):
     """
     Generate probabilities for a multilabel, multiclass estimator
 
@@ -135,7 +136,7 @@ def estimate_probability_multilabel_multiclass(vectorizer, model, streamer, prec
     texts = (doc.text for doc in streamer)
     predicted = pipeline.predict_proba(texts)
     for i, docidx in enumerate(streamer.index):
-        yield docidx, tuple(round(label_predictions[i], int(precision))
+        yield docidx, tuple(label_predictions[i].round(int(precision))
                             for label_predictions in predicted)
 
 
