@@ -24,7 +24,7 @@ def test_simple_estimator():
          str(PSEUDO_ESTIMATOR_PATH.joinpath('data', 'model.pickle')),
          str(PSEUDO_CORPUS_PATH)]
     )
-    assert output == 'file,is_world\n1,False\n2,False\n'
+    assert output == 'file,is_world\ncfr,False\nmoby,False\n'
 
 
 def test_probability_estimator():
@@ -34,7 +34,7 @@ def test_probability_estimator():
          str(PSEUDO_ESTIMATOR_PATH.joinpath('data', 'model.pickle')),
          str(PSEUDO_CORPUS_PATH), '--probability']
     )
-    assert output == ('file,is_world_prob\n1,0.0506\n2,0.034\n')
+    assert output == ('file,is_world_prob\ncfr,0.0899\nmoby,0.0216\n')
 
 
 def test_probability_estimator_6decimals():
@@ -44,7 +44,7 @@ def test_probability_estimator_6decimals():
          str(PSEUDO_ESTIMATOR_PATH.joinpath('data', 'model.pickle')),
          str(PSEUDO_CORPUS_PATH), '--probability', '--precision', '6']
     )
-    assert output == ('file,is_world_prob\n1,0.050626\n2,0.034038\n')
+    assert output == ('file,is_world_prob\ncfr,0.089898\nmoby,0.02162\n')
 
 
 def test_multiclass_probability_estimator():
@@ -55,15 +55,15 @@ def test_multiclass_probability_estimator():
          str(PSEUDO_CORPUS_PATH), '--probability']
     )
     assert output == ('file,class,probability\n'
-                      '1,business-and-industry,0.1808\n'
-                      '1,environment,0.1744\n'
-                      '1,health-and-public-welfare,0.135\n'
-                      '1,money,0.1591\n'
-                      '1,science-and-technology,0.171\n'
-                      '1,world,0.1797\n'
-                      '2,business-and-industry,0.1792\n'
-                      '2,environment,0.1762\n'
-                      '2,health-and-public-welfare,0.1389\n'
-                      '2,money,0.1603\n'
-                      '2,science-and-technology,0.1699\n'
-                      '2,world,0.1755\n')
+                      'cfr,business-and-industry,0.1765\n'
+                      'cfr,environment,0.1294\n'
+                      'cfr,health-and-public-welfare,0.1785\n'
+                      'cfr,money,0.169\n'
+                      'cfr,science-and-technology,0.147\n'
+                      'cfr,world,0.1997\n'
+                      'moby,business-and-industry,0.1804\n'
+                      'moby,environment,0.1529\n'
+                      'moby,health-and-public-welfare,0.205\n'
+                      'moby,money,0.1536\n'
+                      'moby,science-and-technology,0.1671\n'
+                      'moby,world,0.141\n')
