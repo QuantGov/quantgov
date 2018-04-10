@@ -45,7 +45,7 @@ def estimate_simple(vectorizer, model, streamer):
     yield from zip(streamer.index, pipeline.predict(texts))
 
 
-def estimate_probability(vectorizer, model, streamer):
+def estimate_probability(vectorizer, model, streamer, precision):
     """
     Generate probabilities for a one-label estimator
 
@@ -61,11 +61,12 @@ def estimate_probability(vectorizer, model, streamer):
     pipeline = get_pipeline(vectorizer, model)
     texts = (doc.text for doc in streamer)
     truecol = list(int(i) for i in model.model.classes_).index(1)
-    predicted = (i[truecol] for i in pipeline.predict_proba(texts))
+    predicted = ((round(i[truecol], int(precision))
+                  for i in pipeline.predict_proba(texts)))
     yield from zip(streamer.index, predicted)
 
 
-def estimate_probability_multilabel(vectorizer, model, streamer):
+def estimate_probability_multilabel(vectorizer, model, streamer, precision):
     """
     Generate probabilities for a multilabel binary estimator
 
@@ -96,13 +97,13 @@ def estimate_probability_multilabel(vectorizer, model, streamer):
     try:
         for i, docidx in enumerate(streamer.index):
             yield docidx, tuple(
-                label_predictions[i, truecols[j]]
+                label_predictions[i, truecols[j]].round(int(precision))
                 for j, label_predictions in enumerate(predicted))
     except IndexError:
-        yield from zip(streamer.index, predicted)
+        yield from zip(streamer.index, predicted.round(int(precision)))
 
 
-def estimate_probability_multiclass(vectorizer, model, streamer):
+def estimate_probability_multiclass(vectorizer, model, streamer, precision):
     """
     Generate probabilities for a one-label, multiclass estimator
 
@@ -117,10 +118,12 @@ def estimate_probability_multiclass(vectorizer, model, streamer):
     """
     pipeline = get_pipeline(vectorizer, model)
     texts = (doc.text for doc in streamer)
-    yield from zip(streamer.index, pipeline.predict_proba(texts))
+    yield from zip(streamer.index, (i.round(int(precision))
+                   for i in pipeline.predict_proba(texts)))
 
 
-def estimate_probability_multilabel_multiclass(vectorizer, model, streamer):
+def estimate_probability_multilabel_multiclass(
+        vectorizer, model, streamer, precision):
     """
     Generate probabilities for a multilabel, multiclass estimator
 
@@ -137,7 +140,7 @@ def estimate_probability_multilabel_multiclass(vectorizer, model, streamer):
     texts = (doc.text for doc in streamer)
     predicted = pipeline.predict_proba(texts)
     for i, docidx in enumerate(streamer.index):
-        yield docidx, tuple(label_predictions[i]
+        yield docidx, tuple(label_predictions[i].round(int(precision))
                             for label_predictions in predicted)
 
 
@@ -152,7 +155,7 @@ def is_multiclass(classes):
         return True
 
 
-def estimate(vectorizer, model, corpus, probability, outfile):
+def estimate(vectorizer, model, corpus, probability, precision, outfile):
     """
     Estimate label values for documents in corpus
 
@@ -184,7 +187,7 @@ def estimate(vectorizer, model, corpus, probability, outfile):
         if multilabel:
             if multiclass:  # Multilabel-multiclass probability
                 results = estimate_probability_multilabel_multiclass(
-                    vectorizer, model, streamer)
+                    vectorizer, model, streamer, precision)
                 writer.writerow(corpus.index_labels +
                                 ('label', 'class', 'probability'))
                 writer.writerows(
@@ -198,7 +201,7 @@ def estimate(vectorizer, model, corpus, probability, outfile):
                 )
             else:  # Multilabel probability
                 results = estimate_probability_multilabel(
-                    vectorizer, model, streamer)
+                    vectorizer, model, streamer, precision)
                 writer.writerow(corpus.index_labels + ('label', 'probability'))
                 writer.writerows(
                     docidx + (label_name, prediction)
@@ -209,7 +212,7 @@ def estimate(vectorizer, model, corpus, probability, outfile):
         elif multiclass:  # Multiclass probability
             writer.writerow(corpus.index_labels + ('class', 'probability'))
             results = estimate_probability_multiclass(
-                vectorizer, model, streamer)
+                vectorizer, model, streamer, precision)
             writer.writerows(
                 docidx + (class_name, prediction)
                 for docidx, predictions in results
@@ -217,7 +220,8 @@ def estimate(vectorizer, model, corpus, probability, outfile):
                     model.model.classes_, predictions)
             )
         else:  # Simple probability
-            results = estimate_probability(vectorizer, model, streamer)
+            results = estimate_probability(
+                vectorizer, model, streamer, precision)
             writer.writerow(
                 corpus.index_labels + (model.label_names[0] + '_prob',))
             writer.writerows(
