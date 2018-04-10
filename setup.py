@@ -65,6 +65,10 @@ setup(
         'nlp': [
             'textblob',
             'nltk',
+        ],
+        's3driver': [
+            'sqlalchemy',
+            'boto3'
         ]
     },
     entry_points={
