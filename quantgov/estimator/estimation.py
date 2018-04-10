@@ -118,8 +118,8 @@ def estimate_probability_multiclass(vectorizer, model, streamer, precision):
     """
     pipeline = get_pipeline(vectorizer, model)
     texts = (doc.text for doc in streamer)
-    yield from zip(streamer.index,
-        (i.round(int(precision)) for i in pipeline.predict_proba(texts)))
+    yield from zip(streamer.index, (i.round(int(precision))
+                   for i in pipeline.predict_proba(texts)))
 
 
 def estimate_probability_multilabel_multiclass(

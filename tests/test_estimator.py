@@ -7,7 +7,7 @@ from pathlib import Path
 
 PSEUDO_CORPUS_PATH = Path(__file__).resolve().parent.joinpath('pseudo_corpus')
 PSEUDO_ESTIMATOR_PATH = Path(__file__).resolve().parent.joinpath(
-                                                           'pseudo_estimator')
+                                              'pseudo_estimator')
 
 
 def check_output(cmd):
