@@ -321,8 +321,9 @@ class S3DatabaseDriver(S3Driver):
         self.bucket = bucket
         self.client = boto3.client('s3')
         self.index = []
-        engine = sqlalchemy.create_engine(f'{protocol}://{user}:{password}'
-                                          f'@{host}:{port}/{db}')
+        engine = sqlalchemy.create_engine('{}://{}:{}@{}:{}/{}'
+                                          .format(protocol, user, password,
+                                                  host, port, db))
         conn = engine.connect()
         result = conn.execute(query)
         for doc in result:
