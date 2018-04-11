@@ -280,6 +280,7 @@ class S3Driver(IndexDriver):
         self.index = Path(index)
         self.bucket = bucket
         self.client = boto3.client('s3')
+        self.encoding = encoding
         with self.index.open(encoding=encoding) as inf:
             index_labels = next(csv.reader(inf))[:-1]
         super(IndexDriver, self).__init__(
@@ -289,7 +290,7 @@ class S3Driver(IndexDriver):
         idx, path = docinfo
         body = self.client.get_object(Bucket=self.bucket,
                                       Key=str(path))['Body']
-        return Document(idx, body.read())
+        return Document(idx, body.read().decode(self.encoding))
 
     def filter(self, pattern):
         """ Filter paths based on index values. """
