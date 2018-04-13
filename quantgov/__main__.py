@@ -119,7 +119,7 @@ def parse_args():
         '--probability', action='store_true',
         help='output probabilities instead of predictions')
     estimate.add_argument(
-        '--precision', default=4,
+        '--precision', default=4, type=int,
         help='number of decimal places to round the probabilities')
     estimate.add_argument(
         '-o', '--outfile',
