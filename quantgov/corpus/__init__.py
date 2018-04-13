@@ -5,5 +5,7 @@ from .structures import (
     FlatFileCorpusDriver,
     RecursiveDirectoryCorpusDriver,
     NamePatternCorpusDriver,
-    IndexDriver
+    IndexDriver,
+    S3Driver,
+    S3DatabaseDriver
 )
