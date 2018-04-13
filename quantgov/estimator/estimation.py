@@ -61,8 +61,9 @@ def estimate_probability(vectorizer, model, streamer, precision):
     pipeline = get_pipeline(vectorizer, model)
     texts = (doc.text for doc in streamer)
     truecol = list(int(i) for i in model.model.classes_).index(1)
-    predicted = ((round(i[truecol], precision)
-                  for i in pipeline.predict_proba(texts)))
+    predicted = (
+        i[truecol] for i in pipeline.predict_proba(texts).round(precision)
+    )
     yield from zip(streamer.index, predicted)
 
 
