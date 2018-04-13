@@ -296,14 +296,6 @@ class S3Driver(IndexDriver):
         """ Filter paths based on index values. """
         raise NotImplementedError
 
-    def gen_indces_and_paths(self):
-        """Yield paths to s3 objects. """
-        with self.index.open() as inf:
-            reader = csv.reader(inf)
-            next(reader)
-            for row in reader:
-                yield tuple(row[:-1]), row[-1]
-
     def stream(self):
         """Yield text from an object stored in s3. """
         return qgutils.lazy_parallel(self.read, self.gen_indices_and_paths())
