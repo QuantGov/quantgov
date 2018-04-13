@@ -15,7 +15,7 @@ import joblib as jl
 import requests
 
 import quantgov
-import quantgov.corpora.builtins
+import quantgov.corpus.builtins
 
 from pathlib import Path
 
@@ -40,7 +40,7 @@ def parse_args():
     # Corpus command
     corpus = subparsers.add_parser('corpus')
     corpus_subcommands = corpus.add_subparsers(dest='subcommand')
-    for command, builtin in quantgov.corpora.builtins.commands.items():
+    for command, builtin in quantgov.corpus.builtins.commands.items():
         subcommand = corpus_subcommands.add_parser(
             command, help=builtin.cli.help)
         subcommand.add_argument(
@@ -161,7 +161,7 @@ def start_component(args):
 def run_corpus_builtin(args):
     driver = quantgov.load_driver(args.corpus)
     writer = csv.writer(args.outfile)
-    builtin = quantgov.corpora.builtins.commands[args.subcommand]
+    builtin = quantgov.corpus.builtins.commands[args.subcommand]
     func_args = {i: j for i, j in vars(args).items()
                  if i not in {'command', 'subcommand', 'outfile', 'corpus'}}
     writer.writerow(driver.index_labels + builtin.get_columns(func_args))
