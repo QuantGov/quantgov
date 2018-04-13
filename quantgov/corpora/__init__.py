@@ -7,7 +7,9 @@ from ..corpus import (
     FlatFileCorpusDriver,
     RecursiveDirectoryCorpusDriver,
     NamePatternCorpusDriver,
-    IndexDriver
+    IndexDriver,
+    S3Driver,
+    S3DatabaseDriver
 )
 
 warnings.warn(

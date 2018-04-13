@@ -6,14 +6,14 @@ from pathlib import Path
 
 
 def build_recursive_directory_corpus(directory):
-    for path, text in (('a/1.txt', u'foo'), ('b/2.txt', u'bar')):
+    for path, text in (('a/1.txt', 'foo'), ('b/2.txt', 'bar')):
         directory.join(path).write_text(text, encoding='utf-8', ensure=True)
     return quantgov.corpus.RecursiveDirectoryCorpusDriver(
         directory=str(directory), index_labels=('letter', 'number'))
 
 
 def build_name_pattern_corpus(directory):
-    for path, text in (('a_1.txt', u'foo'), ('b_2.txt', u'bar')):
+    for path, text in (('a_1.txt', 'foo'), ('b_2.txt', 'bar')):
         path = directory.join(path).write_text(
             text, encoding='utf-8', ensure=True)
     return quantgov.corpus.NamePatternCorpusDriver(
@@ -25,23 +25,39 @@ def build_name_pattern_corpus(directory):
 def build_index_corpus(directory):
     rows = []
     for letter, number, path, text in (
-            ('a', '1', 'first.txt', u'foo'),
-            ('b', '2', 'second.txt', u'bar')
+            ('a', '1', 'first.txt', 'foo'),
+            ('b', '2', 'second.txt', 'bar')
     ):
         outpath = directory.join(path, abs=1)
         outpath.write_text(text, encoding='utf-8')
         rows.append((letter, number, str(outpath)))
     index_path = directory.join('index.csv')
     with index_path.open('w', encoding='utf-8') as outf:
-        outf.write(u'letter,number,path\n')
-        outf.write(u'\n'.join(','.join(row) for row in rows))
-    return quantgov.corpus.IndexDriver(str(index_path))
+        outf.write('letter,number,path\n')
+        outf.write('\n'.join(','.join(row) for row in rows))
+    return quantgov.corpora.IndexDriver(str(index_path))
+
+
+def build_s3_corpus(directory):
+    rows = []
+    for letter, number, path in (
+            ('a', '1', 'quantgov_tests/first.txt'),
+            ('b', '2', 'quantgov_tests/second.txt')
+    ):
+        rows.append((letter, number, path))
+    index_path = directory.join('index.csv')
+    with index_path.open('w', encoding='utf-8') as outf:
+        outf.write('letter,number,path\n')
+        outf.write('\n'.join(','.join(row) for row in rows))
+    return quantgov.corpora.S3Driver(str(index_path),
+                                     bucket='quantgov-databanks')
 
 
 BUILDERS = {
     'RecursiveDirectoryCorpusDriver': build_recursive_directory_corpus,
     'NamePatternCorpusDriver': build_name_pattern_corpus,
     'IndexDriver': build_index_corpus,
+    'S3Driver': build_s3_corpus
 }
 
 

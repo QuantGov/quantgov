@@ -9,14 +9,38 @@ import collections
 import csv
 import logging
 
+from decorator import decorator
 from collections import namedtuple
 from pathlib import Path
 
 from .. import utils as qgutils
 
+try:
+    import boto3
+except ImportError:
+    boto3 = None
+try:
+    import sqlalchemy
+except ImportError:
+    sqlalchemy = None
+
 log = logging.getLogger(__name__)
 
 Document = namedtuple('Document', ['index', 'text'])
+
+
+@decorator
+def check_boto(func, *args, **kwargs):
+    if boto3 is None:
+        raise RuntimeError('Must install boto3 to use {}'.format(func))
+    return func(*args, **kwargs)
+
+
+@decorator
+def check_sqlalchemy(func, *args, **kwargs):
+    if sqlalchemy is None:
+        raise RuntimeError('Must install sqlalchemy to use {}'.format(func))
+    return func(*args, **kwargs)
 
 
 class CorpusStreamer(object):
@@ -243,3 +267,64 @@ class IndexDriver(FlatFileCorpusDriver):
             next(reader)
             for row in reader:
                 yield tuple(row[:-1]), Path(row[-1])
+
+
+class S3Driver(IndexDriver):
+    """
+    Serve a whole or partial corpus from a remote file location in s3.
+    Filtering can be done using the values provided in the index file.
+    """
+
+    @check_boto
+    def __init__(self, index, bucket, encoding='utf-8', cache=True):
+        self.index = Path(index)
+        self.bucket = bucket
+        self.client = boto3.client('s3')
+        self.encoding = encoding
+        with self.index.open(encoding=encoding) as inf:
+            index_labels = next(csv.reader(inf))[:-1]
+        super(IndexDriver, self).__init__(
+            index_labels=index_labels, encoding=encoding, cache=cache)
+
+    def read(self, docinfo):
+        idx, path = docinfo
+        body = self.client.get_object(Bucket=self.bucket,
+                                      Key=str(path))['Body']
+        return Document(idx, body.read().decode(self.encoding))
+
+    def filter(self, pattern):
+        """ Filter paths based on index values. """
+        raise NotImplementedError
+
+    def stream(self):
+        """Yield text from an object stored in s3. """
+        return qgutils.lazy_parallel(self.read, self.gen_indices_and_paths())
+
+
+class S3DatabaseDriver(S3Driver):
+    """
+    Retrieves an index table from a database with an arbitrary, user-provided
+    query and serves documents like a normal S3Driver.
+    """
+
+    @check_boto
+    @check_sqlalchemy
+    def __init__(self, protocol, user, password, host, db, port, query,
+                 bucket, cache=True, encoding='utf-8'):
+        self.bucket = bucket
+        self.client = boto3.client('s3')
+        self.index = []
+        engine = sqlalchemy.create_engine('{}://{}:{}@{}:{}/{}'
+                                          .format(protocol, user, password,
+                                                  host, port, db))
+        conn = engine.connect()
+        result = conn.execute(query)
+        for doc in result:
+            self.index.append(doc)
+        index_labels = doc.keys()
+        super(IndexDriver, self).__init__(
+            index_labels=index_labels, encoding=encoding, cache=cache)
+
+    def gen_indices_and_paths(self):
+        for row in self.index:
+            yield tuple(row[:-1]), row[-1]
