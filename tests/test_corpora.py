@@ -33,15 +33,9 @@ def build_index_corpus(directory):
         rows.append((letter, number, str(outpath)))
     index_path = directory.join('index.csv')
     with index_path.open('w', encoding='utf-8') as outf:
-<<<<<<< HEAD
         outf.write('letter,number,path\n')
         outf.write('\n'.join(','.join(row) for row in rows))
     return quantgov.corpora.IndexDriver(str(index_path))
-=======
-        outf.write(u'letter,number,path\n')
-        outf.write(u'\n'.join(','.join(row) for row in rows))
-    return quantgov.corpus.IndexDriver(str(index_path))
->>>>>>> 251328340d8557ed2f098d58c419464d3969cfb2
 
 
 def build_s3_corpus(directory):
