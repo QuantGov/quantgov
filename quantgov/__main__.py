@@ -119,6 +119,9 @@ def parse_args():
         '--probability', action='store_true',
         help='output probabilities instead of predictions')
     estimate.add_argument(
+        '--precision', default=4, type=int,
+        help='number of decimal places to round the probabilities')
+    estimate.add_argument(
         '-o', '--outfile',
         type=lambda x: open(x, 'w', newline='', encoding='utf-8'),
         default=sys.stdout,
@@ -187,7 +190,7 @@ def run_estimator(args):
     elif args.subcommand == "estimate":
         quantgov.estimator.estimate(
             args.vectorizer, args.model, args.corpus, args.probability,
-            args.outfile
+            args.precision, args.outfile
         )
 
 
