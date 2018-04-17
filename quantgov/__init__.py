@@ -9,7 +9,6 @@ __all__ = [
     'utils',
 ]
 
-
 from . import corpora  # Backwards compatibility
 
 from .utils import load_driver
