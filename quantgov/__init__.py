@@ -3,11 +3,14 @@ from __future__ import (absolute_import, division, print_function,
 
 __all__ = [
     'corpora',
+    'corpus',
     'estimator',
     'project',
     'utils',
 ]
 
-from .corpora.utils import load_driver
+from . import corpora  # Backwards compatibility
 
-__version__ = '0.3.3'
+from .utils import load_driver
+
+__version__ = '0.4.0'

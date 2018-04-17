@@ -4,6 +4,9 @@ python:
 - '3.6'
 install:
 - pip install ".[testing]"
+- pip install ".[nlp]"
+- pip install ".[s3driver]"
+- python -m nltk.downloader punkt stopwords wordnet
 script: pytest
 deploy:
   provider: pypi

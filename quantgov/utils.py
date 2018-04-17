@@ -1,7 +1,22 @@
 # TODO: Docstrings
+
 import collections
 import concurrent.futures
-import multiprocessing
+import os
+import sys
+
+from pathlib import Path
+
+
+def load_driver(corpus):
+    corpus = Path(corpus)
+    if corpus.name == 'driver.py' or corpus.name == 'timestamp':
+        corpus = corpus.parent
+    sys.path.insert(0, str(corpus))
+    from driver import driver
+    sys.path.pop(0)
+    return driver
+
 
 _POOLS = {
     'thread': concurrent.futures.ThreadPoolExecutor,
@@ -26,7 +41,7 @@ def lazy_parallel(func, *iterables, **kwargs):
     worker = kwargs.get('worker', 'thread')
     max_workers = kwargs.get('max_workers')
     if max_workers is None:  # Not in back-port
-        max_workers = (multiprocessing.cpu_count() or 1)
+        max_workers = (os.cpu_count() or 1)
         if worker == 'thread':
             max_workers *= 5
     try:
