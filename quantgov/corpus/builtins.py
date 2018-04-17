@@ -146,8 +146,10 @@ class ShannonEntropy():
                 flags=('--stopwords', '-sw'),
                 kwargs={
                     'help': 'stopwords to ignore',
-                    'default': (nltk.corpus.stopwords.words('english')
-                                if NLTK else None)
+                    'default': (
+                        None if not NLTK else
+                        nltk.corpus.stopwords.words('english')
+                    )
                 }
             ),
             quantgov.utils.CLIArg(
