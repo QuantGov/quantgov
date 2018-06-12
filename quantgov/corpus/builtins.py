@@ -22,7 +22,10 @@ except ImportError:
 if NLTK:
     try:
         nltk.corpus.wordnet.ensure_loaded()
+        nltk.corpus.stopwords.ensure_loaded()
     except LookupError:
+        nltk.download('stopwords')
+        nltk.corpus.stopwords.ensure_loaded()
         nltk.download('wordnet')
         nltk.corpus.wordnet.ensure_loaded()
 
