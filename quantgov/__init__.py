@@ -13,4 +13,4 @@ from . import corpora  # Backwards compatibility
 
 from .utils import load_driver
 
-__version__ = '0.4.01.'
+__version__ = '0.4.1'
