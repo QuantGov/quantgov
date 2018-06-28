@@ -286,6 +286,13 @@ class S3Driver(IndexDriver):
         super(IndexDriver, self).__init__(
             index_labels=index_labels, encoding=encoding, cache=cache)
 
+    def gen_indices_and_paths(self):
+        with self.index.open() as inf:
+            reader = csv.reader(inf)
+            next(reader)
+            for row in reader:
+                yield tuple(row[:-1]), row[-1]
+
     def read(self, docinfo):
         idx, path = docinfo
         body = self.client.get_object(Bucket=self.bucket,
