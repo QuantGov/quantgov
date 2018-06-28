@@ -287,7 +287,7 @@ class S3Driver(IndexDriver):
             index_labels=index_labels, encoding=encoding, cache=cache)
 
     def gen_indices_and_paths(self):
-        with self.index.open() as inf:
+        with self.index.open(encoding=self.encoding) as inf:
             reader = csv.reader(inf)
             next(reader)
             for row in reader:
