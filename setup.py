@@ -58,7 +58,6 @@ setup(
         'requests',
         'scikit-learn',
         'scipy',
-        'snakemake',
     ],
     extras_require={
         'testing': ['pytest-flake8'],
