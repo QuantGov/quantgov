@@ -1,5 +1,5 @@
 import pytest
-import quantgov.estimator
+import quantgov.ml
 import subprocess
 
 from pathlib import Path
@@ -21,7 +21,7 @@ def check_output(cmd):
 
 def test_simple_estimator():
     output = check_output(
-        ['quantgov', 'estimator', 'estimate',
+        ['quantgov', 'ml', 'estimate',
          str(PSEUDO_ESTIMATOR_PATH.joinpath('data', 'vectorizer.pickle')),
          str(PSEUDO_ESTIMATOR_PATH.joinpath('data', 'model.pickle')),
          str(PSEUDO_CORPUS_PATH)]
@@ -31,7 +31,7 @@ def test_simple_estimator():
 
 def test_probability_estimator():
     output = check_output(
-        ['quantgov', 'estimator', 'estimate',
+        ['quantgov', 'ml', 'estimate',
          str(PSEUDO_ESTIMATOR_PATH.joinpath('data', 'vectorizer.pickle')),
          str(PSEUDO_ESTIMATOR_PATH.joinpath('data', 'model.pickle')),
          str(PSEUDO_CORPUS_PATH), '--probability']
@@ -41,7 +41,7 @@ def test_probability_estimator():
 
 def test_probability_estimator_6decimals():
     output = check_output(
-        ['quantgov', 'estimator', 'estimate',
+        ['quantgov', 'ml', 'estimate',
          str(PSEUDO_ESTIMATOR_PATH.joinpath('data', 'vectorizer.pickle')),
          str(PSEUDO_ESTIMATOR_PATH.joinpath('data', 'model.pickle')),
          str(PSEUDO_CORPUS_PATH), '--probability', '--precision', '6']
@@ -51,7 +51,7 @@ def test_probability_estimator_6decimals():
 
 def test_multiclass_probability_estimator():
     output = check_output(
-        ['quantgov', 'estimator', 'estimate',
+        ['quantgov', 'ml', 'estimate',
          str(PSEUDO_ESTIMATOR_PATH.joinpath('data', 'vectorizer.pickle')),
          str(PSEUDO_ESTIMATOR_PATH.joinpath('data', 'modelmulticlass.pickle')),
          str(PSEUDO_CORPUS_PATH), '--probability']

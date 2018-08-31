@@ -14,7 +14,6 @@ from collections import namedtuple
 from pathlib import Path
 
 from . import utils as qgutils
-from . import nlp as builtins  # Backwards compatibility
 
 try:
     import boto3

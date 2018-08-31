@@ -35,7 +35,7 @@ def build_index_corpus(directory):
     with index_path.open('w', encoding='utf-8') as outf:
         outf.write('letter,number,path\n')
         outf.write('\n'.join(','.join(row) for row in rows))
-    return quantgov.corpora.IndexDriver(str(index_path))
+    return quantgov.corpus.IndexDriver(str(index_path))
 
 
 def build_s3_corpus(directory):
@@ -49,8 +49,8 @@ def build_s3_corpus(directory):
     with index_path.open('w', encoding='utf-8') as outf:
         outf.write('letter,number,path\n')
         outf.write('\n'.join(','.join(row) for row in rows))
-    return quantgov.corpora.S3Driver(str(index_path),
-                                     bucket='quantgov-databanks')
+    return quantgov.corpus.S3Driver(str(index_path),
+                                    bucket='quantgov-databanks')
 
 
 BUILDERS = {
@@ -107,14 +107,14 @@ def check_output(cmd):
 
 def test_wordcount():
     output = check_output(
-        ['quantgov', 'corpus', 'count_words', str(PSEUDO_CORPUS_PATH)],
+        ['quantgov', 'nlp', 'count_words', str(PSEUDO_CORPUS_PATH)],
     )
     assert output == 'file,words\ncfr,349153\nmoby,216645\n'
 
 
 def test_wordcount_pattern():
     output = check_output(
-        ['quantgov', 'corpus', 'count_words', str(PSEUDO_CORPUS_PATH),
+        ['quantgov', 'nlp', 'count_words', str(PSEUDO_CORPUS_PATH),
          '--word_pattern', '\S+']
     )
     assert output == 'file,words\ncfr,333237\nmoby,210130\n'
@@ -122,7 +122,7 @@ def test_wordcount_pattern():
 
 def test_termcount():
     output = check_output(
-        ['quantgov', 'corpus', 'count_occurrences', str(PSEUDO_CORPUS_PATH),
+        ['quantgov', 'nlp', 'count_occurrences', str(PSEUDO_CORPUS_PATH),
          'shall'],
     )
     assert output == 'file,shall\ncfr,1946\nmoby,94\n'
@@ -130,7 +130,7 @@ def test_termcount():
 
 def test_termcount_multiple():
     output = check_output(
-        ['quantgov', 'corpus', 'count_occurrences', str(PSEUDO_CORPUS_PATH),
+        ['quantgov', 'nlp', 'count_occurrences', str(PSEUDO_CORPUS_PATH),
          'shall', 'must', 'may not'],
     )
     assert output == ('file,shall,must,may not\n'
@@ -139,7 +139,7 @@ def test_termcount_multiple():
 
 def test_termcount_multiple_with_label():
     output = check_output(
-        ['quantgov', 'corpus', 'count_occurrences', str(PSEUDO_CORPUS_PATH),
+        ['quantgov', 'nlp', 'count_occurrences', str(PSEUDO_CORPUS_PATH),
          'shall', 'must', 'may not', '--total_label', 'allofthem'],
     )
     assert output == ('file,shall,must,may not,allofthem\n'
@@ -148,14 +148,14 @@ def test_termcount_multiple_with_label():
 
 def test_shannon_entropy():
     output = check_output(
-        ['quantgov', 'corpus', 'shannon_entropy', str(PSEUDO_CORPUS_PATH)],
+        ['quantgov', 'nlp', 'shannon_entropy', str(PSEUDO_CORPUS_PATH)],
     )
     assert output == 'file,shannon_entropy\ncfr,10.71\nmoby,11.81\n'
 
 
 def test_shannon_entropy_no_stopwords():
     output = check_output(
-        ['quantgov', 'corpus', 'shannon_entropy', str(PSEUDO_CORPUS_PATH),
+        ['quantgov', 'nlp', 'shannon_entropy', str(PSEUDO_CORPUS_PATH),
          '--stopwords', 'None'],
     )
     assert output == 'file,shannon_entropy\ncfr,9.52\nmoby,10.03\n'
@@ -163,7 +163,7 @@ def test_shannon_entropy_no_stopwords():
 
 def test_shannon_entropy_4decimals():
     output = check_output(
-        ['quantgov', 'corpus', 'shannon_entropy', str(PSEUDO_CORPUS_PATH),
+        ['quantgov', 'nlp', 'shannon_entropy', str(PSEUDO_CORPUS_PATH),
          '--precision', '4'],
     )
     assert output == 'file,shannon_entropy\ncfr,10.7127\nmoby,11.813\n'
@@ -171,21 +171,21 @@ def test_shannon_entropy_4decimals():
 
 def test_conditionalcount():
     output = check_output(
-        ['quantgov', 'corpus', 'count_conditionals', str(PSEUDO_CORPUS_PATH)],
+        ['quantgov', 'nlp', 'count_conditionals', str(PSEUDO_CORPUS_PATH)],
     )
     assert output == 'file,conditionals\ncfr,2132\nmoby,2374\n'
 
 
 def test_sentencelength():
     output = check_output(
-        ['quantgov', 'corpus', 'sentence_length', str(PSEUDO_CORPUS_PATH)],
+        ['quantgov', 'nlp', 'sentence_length', str(PSEUDO_CORPUS_PATH)],
     )
     assert output == 'file,sentence_length\ncfr,18.68\nmoby,25.09\n'
 
 
 def test_sentencelength_4decimals():
     output = check_output(
-        ['quantgov', 'corpus', 'sentence_length', str(PSEUDO_CORPUS_PATH),
+        ['quantgov', 'nlp', 'sentence_length', str(PSEUDO_CORPUS_PATH),
          '--precision', '4'],
     )
     assert output == 'file,sentence_length\ncfr,18.6827\nmoby,25.0936\n'
@@ -193,7 +193,7 @@ def test_sentencelength_4decimals():
 
 def test_sentiment_analysis():
     output = check_output(
-        ['quantgov', 'corpus', 'sentiment_analysis', str(PSEUDO_CORPUS_PATH)],
+        ['quantgov', 'nlp', 'sentiment_analysis', str(PSEUDO_CORPUS_PATH)],
     )
     assert output == ('file,sentiment_polarity,sentiment_subjectivity'
                       '\ncfr,0.01,0.42\nmoby,0.08,0.48\n')
@@ -201,7 +201,7 @@ def test_sentiment_analysis():
 
 def test_sentiment_analysis_4decimals():
     output = check_output(
-        ['quantgov', 'corpus', 'sentiment_analysis', str(PSEUDO_CORPUS_PATH),
+        ['quantgov', 'nlp', 'sentiment_analysis', str(PSEUDO_CORPUS_PATH),
          '--precision', '4'],
     )
     assert output == ('file,sentiment_polarity,sentiment_subjectivity'

@@ -6,7 +6,8 @@ import collections
 import math
 
 from decorator import decorator
-import quantgov
+
+from . import utils
 
 try:
     import nltk.corpus
@@ -45,10 +46,10 @@ def check_textblob(func, *args, **kwargs):
 
 class WordCounter():
 
-    cli = quantgov.utils.CLISpec(
+    cli = utils.CLISpec(
         help='Word Counter',
         arguments=[
-            quantgov.utils.CLIArg(
+            utils.CLIArg(
                 flags=('--word_pattern', '-wp'),
                 kwargs={
                     'help': 'regular expression defining a "word"',
@@ -73,17 +74,17 @@ commands['count_words'] = WordCounter
 
 class OccurrenceCounter():
 
-    cli = quantgov.utils.CLISpec(
+    cli = utils.CLISpec(
         help="Term Counter for Specific Words",
         arguments=[
-            quantgov.utils.CLIArg(
+            utils.CLIArg(
                 flags=('terms'),
                 kwargs={
                     'help': 'list of terms to be counted',
                     'nargs': '+'
                 }
             ),
-            quantgov.utils.CLIArg(
+            utils.CLIArg(
                 flags=('--total_label'),
                 kwargs={
                     'metavar': 'LABEL',
@@ -93,7 +94,7 @@ class OccurrenceCounter():
                     ),
                 }
             ),
-            quantgov.utils.CLIArg(
+            utils.CLIArg(
                 flags=('--pattern'),
                 kwargs={
                     'help': 'pattern to use in identifying words',
@@ -131,10 +132,10 @@ commands['count_occurrences'] = OccurrenceCounter
 
 class ShannonEntropy():
     lemmas = {}
-    cli = quantgov.utils.CLISpec(
+    cli = utils.CLISpec(
         help='Shannon Entropy',
         arguments=[
-            quantgov.utils.CLIArg(
+            utils.CLIArg(
                 flags=('--word_pattern', '-wp'),
                 kwargs={
                     'help': 'regular expression defining a "word"',
@@ -142,7 +143,7 @@ class ShannonEntropy():
                     'default': re.compile(r'\b\w+\b')
                 }
             ),
-            quantgov.utils.CLIArg(
+            utils.CLIArg(
                 flags=('--stopwords', '-sw'),
                 kwargs={
                     'help': 'stopwords to ignore',
@@ -152,7 +153,7 @@ class ShannonEntropy():
                     )
                 }
             ),
-            quantgov.utils.CLIArg(
+            utils.CLIArg(
                 flags=('--precision'),
                 kwargs={
                     'help': 'decimal places to round',
@@ -197,7 +198,7 @@ commands['shannon_entropy'] = ShannonEntropy
 
 
 class ConditionalCounter():
-    cli = quantgov.utils.CLISpec(
+    cli = utils.CLISpec(
         help=('Count conditional words and phrases. Included terms are: '
               ' "if", "but", "except", "provided", "when", "where", '
               '"whenever", "unless", "notwithstanding", "in the event", '
@@ -225,10 +226,10 @@ commands['count_conditionals'] = ConditionalCounter
 
 class SentenceLength():
 
-    cli = quantgov.utils.CLISpec(
+    cli = utils.CLISpec(
         help='Sentence Length',
         arguments=[
-            quantgov.utils.CLIArg(
+            utils.CLIArg(
                 flags=('--precision'),
                 kwargs={
                     'help': 'decimal places to round',
@@ -263,17 +264,17 @@ commands['sentence_length'] = SentenceLength
 
 class SentimentAnalysis():
 
-    cli = quantgov.utils.CLISpec(
+    cli = utils.CLISpec(
         help='Performs sentiment analysis on the text',
         arguments=[
-            quantgov.utils.CLIArg(
+            utils.CLIArg(
                 flags=('--backend'),
                 kwargs={
                     'help': 'which program to use for the analysis',
                     'default': 'textblob'
                 }
             ),
-            quantgov.utils.CLIArg(
+            utils.CLIArg(
                 flags=('--precision'),
                 kwargs={
                     'help': 'decimal places to round',

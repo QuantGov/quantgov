@@ -37,8 +37,8 @@ def parse_args():
     create.add_argument('--parent', default='master')
 
     # NLP command
-    nlp = subparsers.add_parser('nlp', aliases=['corpus'])
-    nlp_subcommands = nlp.add_subparsers(dest='subcommand')
+    nlp_subparser = subparsers.add_parser('nlp')
+    nlp_subcommands = nlp_subparser.add_subparsers(dest='subcommand')
     for command, builtin in quantgov.nlp.commands.items():
         subcommand = nlp_subcommands.add_parser(
             command, help=builtin.cli.help)
@@ -56,8 +56,8 @@ def parse_args():
         )
 
     # ML Command
-    ml = subparsers.add_parser('ml', aliases=['estimator'])
-    ml_subcommands = ml.add_subparsers(dest='subcommand')
+    ml_parser = subparsers.add_parser('ml')
+    ml_subcommands = ml_parser.add_subparsers(dest='subcommand')
 
     # ML Evaluate
     evaluate = ml_subcommands.add_parser(
@@ -163,7 +163,7 @@ def start_component(args):
 def run_corpus_builtin(args):
     driver = quantgov.load_driver(args.corpus)
     writer = csv.writer(args.outfile)
-    builtin = quantgov.corpus.builtins.commands[args.subcommand]
+    builtin = quantgov.nlp.commands[args.subcommand]
     func_args = {i: j for i, j in vars(args).items()
                  if i not in {'command', 'subcommand', 'outfile', 'corpus'}}
     writer.writerow(driver.index_labels + builtin.get_columns(func_args))
@@ -178,16 +178,16 @@ def run_corpus_builtin(args):
 
 def run_estimator(args):
     if args.subcommand == "evaluate":
-        quantgov.estimator.evaluate(
+        quantgov.ml.evaluate(
             args.modeldefs, args.trainers, args.labels, args.folds,
             args.scoring, args.output_results, args.output_suggestion
         )
     elif args.subcommand == "train":
-        quantgov.estimator.train_and_save_model(
+        quantgov.ml.train_and_save_model(
             args.modeldefs, args.configfile, args.trainers, args.labels,
             args.outfile)
     elif args.subcommand == "estimate":
-        quantgov.estimator.estimate(
+        quantgov.ml.estimate(
             args.vectorizer, args.model, args.corpus, args.probability,
             args.precision, args.outfile
         )
@@ -198,9 +198,7 @@ def main():
     {
         'start': start_component,
         'nlp': run_corpus_builtin,
-        'corpus': run_corpus_builtin,
         'ml': run_estimator,
-        'estimator': run_estimator
     }[args.command](args)
 
 
