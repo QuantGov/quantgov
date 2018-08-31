@@ -5,4 +5,13 @@ __all__ = [
     'structures',
     'training',
 ]
-from quantgov.ml import *
+from quantgov.ml.structures import (
+    Labels,
+    Trainers,
+    Model,
+    CandidateModel
+)
+
+from quantgov.ml.evaluation import evaluate
+from quantgov.ml.training import train_and_save_model
+from quantgov.ml.estimation import estimate
