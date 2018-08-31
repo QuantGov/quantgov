@@ -37,7 +37,7 @@ def parse_args():
     create.add_argument('--parent', default='master')
 
     # NLP command
-    nlp = subparsers.add_parser('nlp')
+    nlp = subparsers.add_parser('nlp', aliases=['corpus'])
     nlp_subcommands = nlp.add_subparsers(dest='subcommand')
     for command, builtin in quantgov.nlp.commands.items():
         subcommand = nlp_subcommands.add_parser(
@@ -56,7 +56,7 @@ def parse_args():
         )
 
     # ML Command
-    ml = subparsers.add_parser('ml')
+    ml = subparsers.add_parser('ml', aliases=['estimator'])
     ml_subcommands = ml.add_subparsers(dest='subcommand')
 
     # ML Evaluate
@@ -198,7 +198,9 @@ def main():
     {
         'start': start_component,
         'nlp': run_corpus_builtin,
-        'ml': run_estimator
+        'corpus': run_corpus_builtin,
+        'ml': run_estimator,
+        'estimator': run_estimator
     }[args.command](args)
 
 
