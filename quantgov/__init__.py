@@ -5,6 +5,8 @@ __all__ = [
     'corpora',
     'corpus',
     'estimator',
+    'ml',
+    'nlp',
     'project',
     'utils',
 ]

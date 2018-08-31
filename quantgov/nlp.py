@@ -1,5 +1,5 @@
 """
-quantgov.corpora.builtins: Functions for analyzing a single Document
+quantgov.nlp: Text-based analysis of documents
 """
 import re
 import collections

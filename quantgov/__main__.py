@@ -15,7 +15,6 @@ import joblib as jl
 import requests
 
 import quantgov
-import quantgov.corpus.builtins
 
 from pathlib import Path
 
@@ -37,11 +36,11 @@ def parse_args():
     create.add_argument('path', type=Path)
     create.add_argument('--parent', default='master')
 
-    # Corpus command
-    corpus = subparsers.add_parser('corpus')
-    corpus_subcommands = corpus.add_subparsers(dest='subcommand')
-    for command, builtin in quantgov.corpus.builtins.commands.items():
-        subcommand = corpus_subcommands.add_parser(
+    # NLP command
+    nlp = subparsers.add_parser('nlp')
+    nlp_subcommands = nlp.add_subparsers(dest='subcommand')
+    for command, builtin in quantgov.nlp.commands.items():
+        subcommand = nlp_subcommands.add_parser(
             command, help=builtin.cli.help)
         subcommand.add_argument(
             'corpus', help='Path to a QuantGov Corpus directory')
@@ -56,12 +55,12 @@ def parse_args():
             default=sys.stdout
         )
 
-    # Estimator Command
-    estimator = subparsers.add_parser('estimator')
-    estimator_subcommands = estimator.add_subparsers(dest='subcommand')
+    # ML Command
+    ml = subparsers.add_parser('ml')
+    ml_subcommands = ml.add_subparsers(dest='subcommand')
 
-    # Estimator Evaluate
-    evaluate = estimator_subcommands.add_parser(
+    # ML Evaluate
+    evaluate = ml_subcommands.add_parser(
         'evaluate', help='Evaluate candidate models')
     evaluate.add_argument(
         'modeldefs', type=Path,
@@ -86,8 +85,8 @@ def parse_args():
         help='Number of folds for cross-validation')
     evaluate.add_argument('--scoring', default='f1', help='scoring method')
 
-    # Estimator Train
-    train = estimator_subcommands.add_parser('train', help='Train a model')
+    # ML Train
+    train = ml_subcommands.add_parser('train', help='Train a model')
     train.add_argument(
         'modeldefs', type=Path,
         help='Python module containing candidate models'
@@ -101,8 +100,8 @@ def parse_args():
         '-o', '--outfile', help='location to save the trained model'
     )
 
-    # Estimator Estimate
-    estimate = estimator_subcommands.add_parser(
+    # ML Estimate
+    estimate = ml_subcommands.add_parser(
         'estimate', help='Estimate label values for a target corpus')
     estimate.add_argument(
         'vectorizer', type=jl.load,
@@ -198,8 +197,8 @@ def main():
     args = parse_args()
     {
         'start': start_component,
-        'corpus': run_corpus_builtin,
-        'estimator': run_estimator
+        'nlp': run_corpus_builtin,
+        'ml': run_estimator
     }[args.command](args)
 
 
