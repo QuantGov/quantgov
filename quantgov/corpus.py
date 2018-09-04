@@ -289,7 +289,7 @@ class S3Driver(IndexDriver):
     def read(self, docinfo):
         idx, path = docinfo
         body = self.client.get_object(Bucket=self.bucket,
-                                      Key=str(path))['Body']
+                                      Key=str(path).replace('\\', '/'))['Body']
         return Document(idx, body.read().decode(self.encoding))
 
     def filter(self, pattern):
