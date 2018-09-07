@@ -10,7 +10,7 @@ def load_models(path):
     Arguments:
 
         * **path**:  Path to a python module containing a list of
-            `quantgov.estimator.CandidateModel` objects in a module-level
+            `quantgov.ml.CandidateModel` objects in a module-level
     """
     path = Path(path).resolve()
     try:

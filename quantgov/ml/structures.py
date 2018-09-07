@@ -1,5 +1,5 @@
 """
-quantgov.estimator.structures
+quantgov.ml.structures
 
 Useful structures for evaluating and training estimators
 """

@@ -1,5 +1,5 @@
 """
-quantgov.estimator.estimation
+quantgov.ml.estimation
 
 Functionality for making predictions with an estimator
 """
@@ -17,7 +17,7 @@ def get_pipeline(vectorizer, model):
 
     Arguments:
         * vectorizer: a sklearn Vectorizer (or pipeline)
-        * model: a quantgov.estimator.Estimator
+        * model: a quantgov.ml.Estimator
 
     Returns: a sklearn Pipeline
     """
@@ -33,7 +33,7 @@ def estimate_simple(vectorizer, model, streamer):
 
     Arguments:
         * vectorizer: a sklearn Vectorizer (or pipeline)
-        * model: a quantgov.estimator.Estimator
+        * model: a quantgov.ml.Estimator
         * streamer: a quantgov.corpora.CorpusStreamer
 
     Yields:
@@ -51,7 +51,7 @@ def estimate_probability(vectorizer, model, streamer, precision):
 
     Arguments:
         * vectorizer: a sklearn Vectorizer (or pipeline)
-        * model: a quantgov.estimator.Estimator
+        * model: a quantgov.ml.Estimator
         * streamer: a quantgov.corpora.CorpusStreamer
 
     Yields:
@@ -73,7 +73,7 @@ def estimate_probability_multilabel(vectorizer, model, streamer, precision):
 
     Arguments:
         * vectorizer: a sklearn Vectorizer (or pipeline)
-        * model: a quantgov.estimator.Estimator
+        * model: a quantgov.ml.Estimator
         * streamer: a quantgov.corpora.CorpusStreamer
 
     Yields:
@@ -110,7 +110,7 @@ def estimate_probability_multiclass(vectorizer, model, streamer, precision):
 
     Arguments:
         * vectorizer: a sklearn Vectorizer (or pipeline)
-        * model: a quantgov.estimator.Estimator
+        * model: a quantgov.ml.Estimator
         * streamer: a quantgov.corpora.CorpusStreamer
 
     Yields:
@@ -132,7 +132,7 @@ def estimate_probability_multilabel_multiclass(
 
     Arguments:
         * vectorizer: a sklearn Vectorizer (or pipeline)
-        * model: a quantgov.estimator.Estimator
+        * model: a quantgov.ml.Estimator
         * streamer: a quantgov.corpora.CorpusStreamer
 
     Yields:
@@ -165,7 +165,7 @@ def estimate(vectorizer, model, corpus, probability, precision, outfile):
     Arguments:
 
         * **vectorizer**: joblib-saved vectorizer
-        * **model**: saved `quantgov.estimator.Model` object
+        * **model**: saved `quantgov.ml.Model` object
         * **corpus**: path to a quantgov corpus
         * **probability**: if True, predict probability
         * **outfile**: open file object for writing results

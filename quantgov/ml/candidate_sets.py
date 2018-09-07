@@ -1,5 +1,5 @@
 """
-quantgov.estimator.candidate_sets: Starter model candidate sets
+quantgov.ml.candidate_sets: Starter model candidate sets
 
 
 This module provides a few sample sets of models for common problems. These are
@@ -18,10 +18,10 @@ import sklearn.multioutput
 import sklearn.pipeline
 import sklearn.feature_extraction
 
-import quantgov.estimator
+import quantgov.ml
 
 classification = [
-    quantgov.estimator.CandidateModel(
+    quantgov.ml.CandidateModel(
         name="Random Forests",
         model=sklearn.pipeline.Pipeline(steps=(
             ('tfidf', sklearn.feature_extraction.text.TfidfTransformer()),
@@ -31,7 +31,7 @@ classification = [
             'rf__n_estimators': [5, 10, 25, 50, 100],
         }
     ),
-    quantgov.estimator.CandidateModel(
+    quantgov.ml.CandidateModel(
         name="Logistic Regression",
         model=sklearn.pipeline.Pipeline(steps=(
             ('tfidf', sklearn.feature_extraction.text.TfidfTransformer()),
@@ -45,7 +45,7 @@ classification = [
 
 
 multilabel_classification = [
-    quantgov.estimator.CandidateModel(
+    quantgov.ml.CandidateModel(
         name="Random Forests",
         model=sklearn.pipeline.Pipeline(steps=(
             ('tfidf', sklearn.feature_extraction.text.TfidfTransformer()),
@@ -55,7 +55,7 @@ multilabel_classification = [
             'rf__n_estimators': [5, 10, 25, 50, 100],
         }
     ),
-    quantgov.estimator.CandidateModel(
+    quantgov.ml.CandidateModel(
         name="Logistic Regression",
         model=sklearn.pipeline.Pipeline(steps=(
             ('tfidf', sklearn.feature_extraction.text.TfidfTransformer()),

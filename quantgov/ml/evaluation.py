@@ -19,7 +19,7 @@ def evaluate_model(model, X, y, folds, scoring):
     Evaluate a single model
 
     Arguments:
-        * model: a quantgov.estimator.Model
+        * model: a quantgov.ml.Model
         * X: array-like of document vectors with shape [n_samples x n_features]
         * y: array-like of labels with shape [n_samples X n_labels]
         * folds: folds to use in cross-validation
@@ -53,7 +53,7 @@ def evaluate_all_models(models, X, y, folds, scoring):
     Evaluate a number of models
 
     Arguments:
-        * models: a sequence of quantgov.estimator.Model objects
+        * models: a sequence of quantgov.ml.Model objects
         * X: array-like of document vectors with shape [n_samples x n_features]
         * y: array-like of labels with shape [n_samples X n_labels]
         * folds: folds to use in cross-validation
@@ -104,10 +104,10 @@ def evaluate(modeldefs, trainers, labels, folds, scoring, results_file,
     Arguments:
 
         * **modeldefs**:  Path to a python module containing a list of
-            `quantgov.estimator.CandidateModel` objects in a module-level
+            `quantgov.ml.CandidateModel` objects in a module-level
             variable named `models'.
-        * **trainers**: a `quantgov.estimator.Trainers` object
-        * **labels**: a `quantgov.estimator.Labels` object
+        * **trainers**: a `quantgov.ml.Trainers` object
+        * **labels**: a `quantgov.ml.Labels` object
         * **folds**: folds to use in cross-validation
         * **scoring**: scoring method to use
         * **results_file**: open file object to which results should be written

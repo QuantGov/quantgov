@@ -1,5 +1,5 @@
 """
-quantgov.corpora.structures
+quantgov.corpus
 
 Classes for Writing QuantGov Corpora
 """
@@ -13,7 +13,7 @@ from decorator import decorator
 from collections import namedtuple
 from pathlib import Path
 
-from .. import utils as qgutils
+from . import utils as qgutils
 
 try:
     import boto3
@@ -289,7 +289,7 @@ class S3Driver(IndexDriver):
     def read(self, docinfo):
         idx, path = docinfo
         body = self.client.get_object(Bucket=self.bucket,
-                                      Key=str(path))['Body']
+                                      Key=str(path).replace('\\', '/'))['Body']
         return Document(idx, body.read().decode(self.encoding))
 
     def filter(self, pattern):
