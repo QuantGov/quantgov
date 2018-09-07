@@ -13,15 +13,27 @@ class _PersistanceMixin(object):
     object
     """
 
+    @classmethod
+    def load(cls, path):
+        """
+        Load a saved object at path `path`
+        """
+        loaded = jl.load(path)
+        if not isinstance(loaded, cls):
+            raise ValueError(
+                'Expected saved type {}, path {} contained saved type {}'
+                .format(cls, path, type(loaded))
+            )
+
     def save(self, path):
         """
-        Use joblib to pickle the object.
+        Use joblib to save the object.
 
         Arguments:
             path: an open file object or string holding the path to where the
                 object should be saved
         """
-        jl.dump(self, path)
+        jl.dump(self, path, compress=True)
 
 
 class Labels(
@@ -65,8 +77,9 @@ class Model(
 
     Arguments:
         * label_names: sequence of names for each label the model estimates
-        * model: a trained sklearn-like model, implementing `.fit`,
-            `.fit_transform`, and `.predict` methods
+        * pipeline: a trained sklearn-like pipeline, implementing `.fit`,
+            `.fit_transform`, and `.predict` methods, where the X inputs are a
+            sequence of strings
     """
     pass
 
