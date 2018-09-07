@@ -40,7 +40,7 @@ def train_and_save_model(modeldefs, configfile, trainers, labels, outfile):
             `quantgov.ml.CandidateModel` objects in a module-level
             variable named `models'.
         * **configfile**: config file as produced by
-            `quantgov estimator evaluate`
+            `quantgov ml evaluate`
         * **trainers**: a `quantgov.ml.Trainers` object
         * **labels**: a `quantgov.ml.Labels` object
         * **outfile**: file to which model should be saved
