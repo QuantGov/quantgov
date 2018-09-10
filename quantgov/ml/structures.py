@@ -24,6 +24,7 @@ class _PersistanceMixin(object):
                 'Expected saved type {}, path {} contained saved type {}'
                 .format(cls, path, type(loaded))
             )
+        return loaded
 
     def save(self, path):
         """
@@ -68,20 +69,45 @@ class Trainers(
     pass
 
 
-class Model(
-    collections.namedtuple('Model', ['label_names', 'model']),
+def is_multiclass(classes):
+    """
+    Returns True if values in classes are anything but 1, 0, True, or False,
+    otherwise returns False.
+    """
+    try:
+        return len(set(int(i) for i in classes) - {0, 1}) != 0
+    except ValueError:
+        return True
+
+
+class Estimator(
+    collections.namedtuple('Estimator', ['label_names', 'pipeline']),
     _PersistanceMixin
 ):
     """
-    A Trained model
+    A Trained estimator
 
     Arguments:
         * label_names: sequence of names for each label the model estimates
         * pipeline: a trained sklearn-like pipeline, implementing `.fit`,
             `.fit_transform`, and `.predict` methods, where the X inputs are a
-            sequence of strings
+            sequence of strings.
     """
-    pass
+
+    def __init__(self, *args, **kwargs):
+        super().__init__()
+        self.multilabel = len(self.label_names) > 1
+        model = self.pipeline.steps[-1][1]
+        if self.multilabel:
+            try:
+                self.multiclass = any(is_multiclass(i) for i in model.classes_)
+            except (AttributeError, TypeError):
+                self.multiclass = any(
+                    is_multiclass(i.classes_)
+                    for i in model.steps[-1][-1].estimators_
+                )
+        else:
+            self.multiclass = is_multiclass(model.classes_)
 
 
 class CandidateModel(

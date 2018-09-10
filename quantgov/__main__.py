@@ -11,7 +11,6 @@ import shutil
 import sys
 import zipfile
 
-import joblib as jl
 import requests
 
 import quantgov
@@ -67,9 +66,12 @@ def parse_args():
         help='python module containing candidate models'
     )
     evaluate.add_argument(
-        'trainers', type=jl.load, help='saved Trainers object')
+        'trainers',
+        type=quantgov.ml.Trainers.load,
+        help='saved Trainers object'
+    )
     evaluate.add_argument(
-        'labels', type=jl.load, help='saved Labels object')
+        'labels', type=quantgov.ml.Labels.load, help='saved Labels object')
     evaluate.add_argument(
         'output_results',
         type=lambda x: open(x, 'w', encoding=ENCODE_OUT),
@@ -93,23 +95,23 @@ def parse_args():
     )
     train.add_argument('configfile', help='Model configuration file')
     train.add_argument(
-        'trainers', type=jl.load, help='saved Trainers object')
+        'trainers',
+        type=quantgov.ml.Trainers.load,
+        help='saved Trainers object'
+    )
     train.add_argument(
-        'labels', type=jl.load, help='saved Labels object')
+        'labels', type=quantgov.ml.Labels.load, help='saved Labels object')
     train.add_argument(
-        '-o', '--outfile', help='location to save the trained model'
+        '-o', '--outfile', help='location to save the trained Estimator'
     )
 
     # ML Estimate
     estimate = ml_subcommands.add_parser(
         'estimate', help='Estimate label values for a target corpus')
     estimate.add_argument(
-        'vectorizer', type=jl.load,
-        help='joblib-saved scikit-learn vectorizer'
-    )
-    estimate.add_argument(
-        'model', type=jl.load,
-        help='saved Model object'
+        'estimator',
+        type=quantgov.ml.Estimator.load,
+        help='saved Estimator object'
     )
     estimate.add_argument(
         'corpus', type=quantgov.load_driver,
@@ -187,9 +189,34 @@ def run_estimator(args):
             args.modeldefs, args.configfile, args.trainers, args.labels,
             args.outfile)
     elif args.subcommand == "estimate":
-        quantgov.ml.estimate(
-            args.vectorizer, args.model, args.corpus, args.probability,
-            args.precision, args.outfile
+        writer = csv.writer(args.outfile)
+        labels = args.corpus.index_labels
+        if args.probability:
+            if args.estimator.multilabel:
+                if args.estimator.multiclass:
+                    writer.writerow(labels + ('label', 'class', 'probability'))
+                else:
+                    writer.writerow(labels + ('label', 'probability'))
+            elif args.estimator.multiclass:
+                writer.writerow(labels + ('class', 'probability'))
+            else:
+                writer.writerow(
+                    labels + ('{}_prob'.format(args.estimator.label_names[0]),)
+                )
+        else:
+            if args.estimator.multilabel:
+                writer.writerow(labels + ('label', 'prediction'))
+            else:
+                writer.writerow(
+                    labels + ('{}'.format(args.estimator.label_names[0]),)
+                )
+        writer.writerows(
+            docidx + result for docidx,
+            result in quantgov.ml.estimate(
+                args.estimator,
+                args.corpus,
+                args.probability,
+                args.precision)
         )
 
 

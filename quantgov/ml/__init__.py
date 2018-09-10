@@ -9,7 +9,7 @@ __all__ = [
 from .structures import (
     Labels,
     Trainers,
-    Model,
+    Estimator,
     CandidateModel
 )
 
