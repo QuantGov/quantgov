@@ -19,7 +19,7 @@ def evaluate_model(model, X, y, folds, scoring):
     Evaluate a single model
 
     Arguments:
-        * model: a quantgov.ml.Model
+        * model: a quantgov.ml.CandidateModel
         * X: array-like of document vectors with shape [n_samples x n_features]
         * y: array-like of labels with shape [n_samples X n_labels]
         * folds: folds to use in cross-validation
@@ -53,7 +53,7 @@ def evaluate_all_models(models, X, y, folds, scoring):
     Evaluate a number of models
 
     Arguments:
-        * models: a sequence of quantgov.ml.Model objects
+        * models: a sequence of quantgov.ml.CandidateModel objects
         * X: array-like of document vectors with shape [n_samples x n_features]
         * y: array-like of labels with shape [n_samples X n_labels]
         * folds: folds to use in cross-validation

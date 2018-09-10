@@ -1,5 +1,7 @@
 import configparser
 
+import sklearn.pipeline
+
 import quantgov.ml
 
 
@@ -30,7 +32,13 @@ def get_model(modeldefs, configfile):
     return model
 
 
-def train_and_save_model(modeldefs, configfile, trainers, labels, outfile):
+def train_and_save_model(
+        modeldefs,
+        configfile,
+        vectorizer,
+        trainers,
+        labels,
+        outfile):
     """
     Train and save model described in config file
 
@@ -41,11 +49,14 @@ def train_and_save_model(modeldefs, configfile, trainers, labels, outfile):
             variable named `models'.
         * **configfile**: config file as produced by
             `quantgov ml evaluate`
+        * **vectorizers**: a `quantgov.ml.Vectorizer` object
         * **trainers**: a `quantgov.ml.Trainers` object
         * **labels**: a `quantgov.ml.Labels` object
         * **outfile**: file to which model should be saved
     """
-
     model = get_model(modeldefs, configfile)
-    model.fit(trainers.vectors, labels.labels)
-    quantgov.ml.Model(labels.label_names, model).save(outfile)
+    pipeline = sklearn.pipeline((
+        ('vectorizer', vectorizer),
+        ('model', model.fit(trainers.vectors, labels.labels)),
+    ))
+    quantgov.ml.Estimator(labels.label_names, pipeline).save(outfile)

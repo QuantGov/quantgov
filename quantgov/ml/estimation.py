@@ -3,242 +3,179 @@ quantgov.ml.estimation
 
 Functionality for making predictions with an estimator
 """
-import csv
 import logging
-
-import sklearn.pipeline
 
 log = logging.getLogger(__name__)
 
 
-def get_pipeline(vectorizer, model):
+def estimate_simple(estimator, streamer):
     """
-    Get the full estimation pipeline
+    Generate predictions for a one-label estimator
 
     Arguments:
-        * vectorizer: a sklearn Vectorizer (or pipeline)
-        * model: a quantgov.ml.Estimator
-
-    Returns: a sklearn Pipeline
-    """
-    return sklearn.pipeline.Pipeline((
-        ('vectorizer', vectorizer),
-        ('model', model.model)
-    ))
-
-
-def estimate_simple(vectorizer, model, streamer):
-    """
-    Generate predictions for an estimator
-
-    Arguments:
-        * vectorizer: a sklearn Vectorizer (or pipeline)
-        * model: a quantgov.ml.Estimator
+        * estimator: a quantgov.ml.Estimator
         * streamer: a quantgov.corpora.CorpusStreamer
 
     Yields:
-        2-tuples of docindex, prediction
+        2-tuples of docindex, (prediction,)
 
     """
-    pipeline = get_pipeline(vectorizer, model)
     texts = (doc.text for doc in streamer)
-    yield from zip(streamer.index, pipeline.predict(texts))
+    predicted = estimator.pipeline.predict(texts)
+    for docidx, prediction in zip(streamer.index, predicted):
+        yield docidx, (prediction,)
 
 
-def estimate_probability(vectorizer, model, streamer, precision):
+def estimate_multilabel(estimator, streamer):
+    """
+    Generate predictions for a multi-label estimator
+
+    Arguments:
+        * estimator: a quantgov.ml.Estimator
+        * streamer: a quantgov.corpora.CorpusStreamer
+
+    Yields:
+        2-tuples of docindex, (label, prediction,)
+
+    """
+    for docidx, (prediction,) in estimate_simple(estimator, streamer):
+        for label, label_prediction in zip(estimator.label_names, prediction):
+            yield docidx, (label, label_prediction)
+
+
+def estimate_probability(estimator, streamer, precision):
     """
     Generate probabilities for a one-label estimator
 
     Arguments:
-        * vectorizer: a sklearn Vectorizer (or pipeline)
-        * model: a quantgov.ml.Estimator
+        * estimator: a quantgov.ml.Estimator
         * streamer: a quantgov.corpora.CorpusStreamer
 
     Yields:
-        2-tuples of docindex, probability
+        2-tuples of docindex, (probability,)
 
     """
-    pipeline = get_pipeline(vectorizer, model)
     texts = (doc.text for doc in streamer)
-    truecol = list(int(i) for i in model.model.classes_).index(1)
+    truecol = list(int(i) for i in estimator.pipeline.classes_).index(1)
     predicted = (
-        i[truecol] for i in pipeline.predict_proba(texts).round(precision)
-    )
-    yield from zip(streamer.index, predicted)
+        estimator.pipeline.predict_proba(texts)[:, truecol].round(precision))
+    yield from zip(streamer.index, ((prob,) for prob in predicted))
 
 
-def estimate_probability_multilabel(vectorizer, model, streamer, precision):
+def estimate_probability_multilabel(estimator, streamer, precision):
     """
     Generate probabilities for a multilabel binary estimator
 
     Arguments:
-        * vectorizer: a sklearn Vectorizer (or pipeline)
-        * model: a quantgov.ml.Estimator
+        * estimator: a quantgov.ml.Estimator
         * streamer: a quantgov.corpora.CorpusStreamer
 
     Yields:
-        2-tuples of docindex, probability
+        2-tuples of docindex, (label, probability)
 
     """
-    pipeline = get_pipeline(vectorizer, model)
     texts = (doc.text for doc in streamer)
+    model = estimator.pipeline.steps[-1][1]
     try:
         truecols = tuple(
             list(int(i) for i in label_classes).index(1)
-            for label_classes in model.model.classes_
+            for label_classes in model.classes_
         )
     except (AttributeError, TypeError):
         truecols = tuple(
             list(int(i) for i in label_classes).index(1)
             for label_classes in (
-                est.classes_ for est in model.model.steps[-1][-1].estimators_
+                est.classes_ for est in model.steps[-1][1].estimators_
             )
         )
-    predicted = pipeline.predict_proba(texts)
+    predicted = estimator.pipeline.predict_proba(texts).round(int(precision))
+
     try:
-        for i, docidx in enumerate(streamer.index):
-            yield docidx, tuple(
-                label_predictions[i, truecols[j]].round(int(precision))
-                for j, label_predictions in enumerate(predicted))
+        yield from (
+            (docidx, (label, label_prediction[truecol]))
+            for docidx, doc_predictions in zip(streamer.index, predicted)
+            for label, label_prediction, truecol
+            in zip(model.label_names, doc_predictions, truecols)
+        )
     except IndexError:
-        yield from zip(streamer.index, predicted.round(int(precision)))
+        yield from (
+            (docidx, (label, label_prediction))
+            for docidx, doc_predictions in zip(streamer.index, predicted)
+            for (label, label_prediction)
+            in zip(model.label_names, doc_predictions)
+        )
 
 
-def estimate_probability_multiclass(vectorizer, model, streamer, precision):
+def estimate_probability_multiclass(estimator, streamer, precision):
     """
     Generate probabilities for a one-label, multiclass estimator
 
     Arguments:
-        * vectorizer: a sklearn Vectorizer (or pipeline)
-        * model: a quantgov.ml.Estimator
+        * estimator: a quantgov.ml.Estimator
         * streamer: a quantgov.corpora.CorpusStreamer
 
     Yields:
-        2-tuples of docindex, probability
+        2-tuples of docindex, (class, probability)
 
     """
-    pipeline = get_pipeline(vectorizer, model)
     texts = (doc.text for doc in streamer)
-    yield from zip(
-        streamer.index,
-        (i for i in pipeline.predict_proba(texts).round(precision))
+    probs = estimator.pipeline.predict_proba(texts).round(precision)
+    yield from (
+        (docidx, (class_, probability))
+        for docidx, doc_probs in zip(streamer.index, probs)
+        for class_, probability in zip(estimator.pipeline.classes_, doc_probs)
     )
 
 
-def estimate_probability_multilabel_multiclass(
-        vectorizer, model, streamer, precision):
+def estimate_probability_multilabel_multiclass(estimator, streamer, precision):
     """
     Generate probabilities for a multilabel, multiclass estimator
 
     Arguments:
-        * vectorizer: a sklearn Vectorizer (or pipeline)
-        * model: a quantgov.ml.Estimator
+        * estimator: a quantgov.ml.Estimator
         * streamer: a quantgov.corpora.CorpusStreamer
 
     Yields:
-        2-tuples of docindex, probability
+        2-tuples of docindex, (label, class, probability
 
     """
-    pipeline = get_pipeline(vectorizer, model)
     texts = (doc.text for doc in streamer)
-    predicted = pipeline.predict_proba(texts)
-    for i, docidx in enumerate(streamer.index):
-        yield docidx, tuple(label_predictions[i] for label_predictions
-                            in predicted.round(precision))
+    probs = estimator.pipeline.predict_proba(texts)
+    yield from (
+        (docidx, (label_name, class_, prob))
+        for label_name, label_probs in zip(estimator.label_names, probs)
+        for docidx, doc_probs in zip(streamer.index, label_probs)
+        for class_, prob in zip(estimator.pipeline.classes_, doc_probs)
+    )
 
 
-def is_multiclass(classes):
-    """
-    Returns True if values in classes are anything but 1, 0, True, or False,
-    otherwise returns False.
-    """
-    try:
-        return len(set(int(i) for i in classes) - {0, 1}) != 0
-    except ValueError:
-        return True
-
-
-def estimate(vectorizer, model, corpus, probability, precision, outfile):
+def estimate(estimator, corpus, probability, precision=4):
     """
     Estimate label values for documents in corpus
 
     Arguments:
 
-        * **vectorizer**: joblib-saved vectorizer
-        * **model**: saved `quantgov.ml.Model` object
+        * **estimator**: path to a saved `quantgov.ml.Estimator` object
         * **corpus**: path to a quantgov corpus
         * **probability**: if True, predict probability
-        * **outfile**: open file object for writing results
+        * **precision**: precision for probability prediction
     """
     streamer = corpus.get_streamer()
-    writer = csv.writer(outfile)
-    if len(model.label_names) > 1:
-        multilabel = True
-        try:
-            multiclass = any(is_multiclass(i) for i in model.model.classes_)
-        except (AttributeError, TypeError):
-            multiclass = any(
-                is_multiclass(i.classes_) for i in
-                model.model.steps[-1][-1].estimators_
-            )
-    else:
-        multilabel = False
-        multiclass = is_multiclass(model.model.classes_)
-
-    # TODO: This is very ugly and complicated and should probably be refactored
     if probability:
-        if multilabel:
-            if multiclass:  # Multilabel-multiclass probability
-                results = estimate_probability_multilabel_multiclass(
-                    vectorizer, model, streamer, precision)
-                writer.writerow(corpus.index_labels +
-                                ('label', 'class', 'probability'))
-                writer.writerows(
-                    docidx + (label_name, class_name, prediction)
-                    for docidx, predictions in results
-                    for label_name, label_classes, label_predictions
-                    in zip(
-                        model.label_names, model.model.classes_, predictions)
-                    for class_name, prediction
-                    in zip(label_classes, label_predictions)
-                )
+        if estimator.multilabel:
+            if estimator.multiclass:  # Multilabel-multiclass probability
+                yield from estimate_probability_multilabel_multiclass(
+                    estimator, streamer, precision)
             else:  # Multilabel probability
-                results = estimate_probability_multilabel(
-                    vectorizer, model, streamer, precision)
-                writer.writerow(corpus.index_labels + ('label', 'probability'))
-                writer.writerows(
-                    docidx + (label_name, prediction)
-                    for docidx, predictions in results
-                    for label_name, prediction
-                    in zip(model.label_names, predictions)
-                )
-        elif multiclass:  # Multiclass probability
-            writer.writerow(corpus.index_labels + ('class', 'probability'))
-            results = estimate_probability_multiclass(
-                vectorizer, model, streamer, precision)
-            writer.writerows(
-                docidx + (class_name, prediction)
-                for docidx, predictions in results
-                for class_name, prediction in zip(
-                    model.model.classes_, predictions)
-            )
+                yield from estimate_probability_multilabel(
+                    estimator, streamer, precision)
+        elif estimator.multiclass:  # Multiclass probability
+            yield from estimate_probability_multiclass(
+                estimator, streamer, precision)
         else:  # Simple probability
-            results = estimate_probability(
-                vectorizer, model, streamer, precision)
-            writer.writerow(
-                corpus.index_labels + (model.label_names[0] + '_prob',))
-            writer.writerows(
-                docidx + (prediction,) for docidx, prediction in results)
-    elif multilabel:  # Multilabel Prediction
-        results = estimate_simple(vectorizer, model, streamer)
-        writer.writerow(corpus.index_labels + ('label', 'prediction'))
-        writer.writerows(
-            docidx + (label_name, prediction,)
-            for docidx, predictions in results
-            for label_name, prediction in zip(model.label_names, predictions)
-        )
-    else:  # Simple Prediction
-        results = estimate_simple(vectorizer, model, streamer)
-        writer.writerow(corpus.index_labels + model.label_names)
-        writer.writerows(docidx + (prediction,)
-                         for docidx, prediction in results)
+            yield from estimate_probability(
+                estimator, streamer, precision)
+    elif estimator.multilabel:  # Multilabel Prediction
+        yield from estimate_multilabel(estimator, streamer)
+    else:  # Binary and Multiclass
+        yield from estimate_simple(estimator, streamer)
