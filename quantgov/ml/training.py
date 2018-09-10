@@ -59,4 +59,4 @@ def train_and_save_model(
         ('vectorizer', vectorizer),
         ('model', model.fit(trainers.vectors, labels.labels)),
     ))
-    quantgov.ml.Model(labels.label_names, pipeline).save(outfile)
+    quantgov.ml.Estimator(labels.label_names, pipeline).save(outfile)
