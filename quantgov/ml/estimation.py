@@ -95,14 +95,14 @@ def estimate_probability_multilabel(estimator, streamer, precision):
             (docidx, (label, label_prediction[truecol]))
             for docidx, doc_predictions in zip(streamer.index, predicted)
             for label, label_prediction, truecol
-            in zip(model.label_names, doc_predictions, truecols)
+            in zip(estimator.label_names, doc_predictions, truecols)
         )
     except IndexError:
         yield from (
             (docidx, (label, label_prediction))
             for docidx, doc_predictions in zip(streamer.index, predicted)
             for (label, label_prediction)
-            in zip(model.label_names, doc_predictions)
+            in zip(estimator.label_names, doc_predictions)
         )
 
 
