@@ -49,7 +49,7 @@ def train_and_save_model(
             variable named `models'.
         * **configfile**: config file as produced by
             `quantgov ml evaluate`
-        * **vectorizers**: a `quantgov.ml.Vectorizer` object
+        * **vectorizer**: an sklearn-compatible Vectorizer object
         * **trainers**: a `quantgov.ml.Trainers` object
         * **labels**: a `quantgov.ml.Labels` object
         * **outfile**: file to which model should be saved

@@ -13,6 +13,7 @@ import zipfile
 
 import requests
 
+import joblib as jl
 import quantgov
 
 from pathlib import Path
@@ -94,6 +95,11 @@ def parse_args():
         help='Python module containing candidate models'
     )
     train.add_argument('configfile', help='Model configuration file')
+    train.add_argument(
+        'vectorizer',
+        type=jl.load,
+        help='saved Vectorizer object'
+    )
     train.add_argument(
         'trainers',
         type=quantgov.ml.Trainers.load,
@@ -186,8 +192,8 @@ def run_estimator(args):
         )
     elif args.subcommand == "train":
         quantgov.ml.train_and_save_model(
-            args.modeldefs, args.configfile, args.trainers, args.labels,
-            args.outfile)
+            args.modeldefs, args.configfile, args.vectorizer, args.trainers,
+            args.labels, args.outfile)
     elif args.subcommand == "estimate":
         writer = csv.writer(args.outfile)
         labels = args.corpus.index_labels
