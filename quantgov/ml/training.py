@@ -55,7 +55,7 @@ def train_and_save_model(
         * **outfile**: file to which model should be saved
     """
     model = get_model(modeldefs, configfile)
-    pipeline = sklearn.pipeline((
+    pipeline = sklearn.pipeline.Pipeline((
         ('vectorizer', vectorizer),
         ('model', model.fit(trainers.vectors, labels.labels)),
     ))
