@@ -1,16 +1,7 @@
 from __future__ import (absolute_import, division, print_function,
                         unicode_literals)
 
-__all__ = [
-    'corpora',
-    'corpus',
-    'estimator',
-    'project',
-    'utils',
-]
-
-from . import corpora  # Backwards compatibility
-
+from . import corpus, nlp, ml, utils
 from .utils import load_driver
 
-__version__ = '0.4.2'
+__version__ = '0.5.0'
