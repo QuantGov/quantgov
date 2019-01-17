@@ -1,9 +1,6 @@
 """
 quantgov.nlp: Text-based analysis of documents
 """
-
-from __future__ import division
-
 import re
 import collections
 import math
@@ -14,7 +11,6 @@ from . import utils
 
 try:
     import nltk.corpus
-    from nltk import word_tokenize, sent_tokenize, bigrams, trigrams, pos_tag
     NLTK = True
 except ImportError:
     NLTK = None
@@ -30,10 +26,6 @@ if NLTK:
     except LookupError:
         nltk.download('wordnet')
         nltk.corpus.wordnet.ensure_loaded()
-    try:
-        nltk.pos_tag('A test.')
-    except LookupError:
-        nltk.download('averaged_perceptron_tagger')
 
 commands = {}
 
@@ -52,7 +44,7 @@ def check_textblob(func, *args, **kwargs):
     return func(*args, **kwargs)
 
 
-class WordCounter:
+class WordCounter():
 
     cli = utils.CLISpec(
         help='Word Counter',
@@ -70,7 +62,7 @@ class WordCounter:
 
     @staticmethod
     def get_columns(args):
-        return ('words', )
+        return ('words',)
 
     @staticmethod
     def process_document(doc, word_pattern):
@@ -80,7 +72,7 @@ class WordCounter:
 commands['count_words'] = WordCounter
 
 
-class OccurrenceCounter:
+class OccurrenceCounter():
 
     cli = utils.CLISpec(
         help="Term Counter for Specific Words",
@@ -138,7 +130,7 @@ class OccurrenceCounter:
 commands['count_occurrences'] = OccurrenceCounter
 
 
-class ShannonEntropy:
+class ShannonEntropy():
     lemmas = {}
     cli = utils.CLISpec(
         help='Shannon Entropy',
@@ -205,7 +197,7 @@ class ShannonEntropy:
 commands['shannon_entropy'] = ShannonEntropy
 
 
-class ConditionalCounter:
+class ConditionalCounter():
     cli = utils.CLISpec(
         help=('Count conditional words and phrases. Included terms are: '
               ' "if", "but", "except", "provided", "when", "where", '
@@ -232,7 +224,7 @@ class ConditionalCounter:
 commands['count_conditionals'] = ConditionalCounter
 
 
-class SentenceLength:
+class SentenceLength():
 
     cli = utils.CLISpec(
         help='Sentence Length',
@@ -270,7 +262,7 @@ class SentenceLength:
 commands['sentence_length'] = SentenceLength
 
 
-class SentimentAnalysis:
+class SentimentAnalysis():
 
     cli = utils.CLISpec(
         help='Performs sentiment analysis on the text',
@@ -316,162 +308,3 @@ class SentimentAnalysis:
 
 
 commands['sentiment_analysis'] = SentimentAnalysis
-
-
-class DesignWords:
-
-    cli = utils.CLISpec(
-        help='Searches for a pre-defined list of words potentially '
-             'associated with design-based standards in text.',
-        arguments=[
-            utils.CLIArg(
-                flags=('--precision'),
-                kwargs={
-                    'help': 'decimal places to round',
-                    'default': 2
-                }
-            )
-        ]
-    )
-
-    @staticmethod
-    def get_columns(args):
-        # column names to return
-        return ('design_word_count', 'design_word_ratio',
-                'design_word_ratio2', )
-
-    @staticmethod
-    @check_nltk
-    def process_document(doc, precision):
-
-        # load in design words
-        # aka weights and measures, chemical compounds, etc.
-        design_words = []
-        with open("quantgov/resources/design_words.txt", 'r') as d:
-            for l in d:
-                design_words.append(l.strip())
-        design_words = [x.lower().strip()
-                        for x in design_words if x != ""]
-
-        # kill stopwords
-        stw = set(nltk.corpus.stopwords.words('english'))
-        design_words = [x for x in design_words if x not in stw]
-
-        # 1-3 grams in design words list
-        dw1 = set([x for x in design_words
-                   if len(word_tokenize(x)) == 1])
-        dw2 = set([x for x in design_words
-                   if len(word_tokenize(x)) == 2])
-        dw3 = set([x for x in design_words
-                   if len(word_tokenize(x)) == 3])
-
-        # tokenize document
-        tokenized = word_tokenize(doc.text)
-
-        # silly count based on words that might indicate design standards
-        # aka best practices, etc.
-        maybe_relevant_count = len([x for x in tokenized
-                                    if x in ['standard',
-                                             'practice',
-                                             'best practice']])
-
-        # single words
-        token_count = collections.Counter(tokenized)
-        dw1_count = sum([token_count[x]
-                         for x in token_count.keys() if x in dw1])
-
-        # bigrams, trigrams
-        bigrams = [' '.join(x) for x in nltk.bigrams(tokenized)]
-        trigrams = [' '.join(x) for x in nltk.trigrams(tokenized)]
-        bigrams = collections.Counter(bigrams)
-        trigrams = collections.Counter(trigrams)
-        dw2_count = sum([bigrams[x]
-                         for x in bigrams.keys() if x in dw2])
-        dw3_count = sum([trigrams[x]
-                         for x in trigrams.keys() if x in dw3])
-
-        # final counts
-        design_word_count = dw1_count + dw2_count + dw3_count
-        design_word_ratio = design_word_count / sum(token_count.values())
-        design_word_ratio2 = design_word_count / len(set(tokenized))
-
-        # rounds
-        if precision:
-            design_word_ratio = round(design_word_ratio, precision)
-            design_word_ratio2 = round(design_word_ratio2, precision)
-
-        return doc.index + (design_word_count, design_word_ratio,
-                            design_word_ratio2, )
-
-
-commands['design_words'] = DesignWords
-
-
-class PartsOfSpeech:
-
-    cli = utils.CLISpec(
-        help='Part of speech tagging and derived metrics',
-        arguments=[
-            utils.CLIArg(
-                flags=('--precision'),
-                kwargs={
-                    'help': 'decimal places to round',
-                    'default': 2
-                }
-            )
-        ]
-    )
-
-    @staticmethod
-    def get_columns(args):
-        # column names to return
-        return ('', '', )
-
-    @staticmethod
-    @check_nltk
-    def process_document(doc, precision):
-
-        # NLTK part of speech tagging
-        nltk_tags = pos_tag(word_tokenize(doc.text))
-
-        # all tags
-        all_tags = []
-        with open('quantgov/resources/nltk_pos_tags.txt', 'r') as o:
-            for x in o.readlines():
-                all_tags.append(x.split('|')[0])
-
-        # count up tags
-        count_tags = {}
-        for x in all_tags:
-            count_tags[x.strip()] = 0
-        for x in nltk_tags:
-            try:
-                count_tags[x[1]] += 1
-            except KeyError:
-                continue
-
-        word_count = sum(count_tags.values())
-        nouns_count = (count_tags['NN'] + count_tags['NNS'] +
-                       count_tags['NNP'])
-        verbs_count = (count_tags['VB'] + count_tags['VBD'] +
-                       count_tags['VBG'] + count_tags['VBN'] +
-                       count_tags['VBP'] + count_tags['VBZ'])
-        noun_verb_ratio = (nouns_count + 1) / (verbs_count + 1)
-        nouns_ratio = (nouns_count + 1) / (word_count + 1)
-        verbs_ratio = (verbs_count + 1) / (word_count + 1)
-        proper_nouns_count = count_tags['NNP'] + count_tags['NNPS']
-        proper_nouns_ratio = (proper_nouns_count + 1) / (word_count + 1)
-
-        if precision:
-            noun_verb_ratio = round(noun_verb_ratio, precision)
-            nouns_ratio = round(nouns_ratio, precision)
-            proper_nouns_ratio = round(proper_nouns_ratio, precision)
-            verbs_ratio = round(verbs_ratio, precision)
-
-        return (doc.index +
-                (noun_verb_ratio, nouns_count, verbs_count,
-                 nouns_ratio, verbs_ratio,
-                 proper_nouns_count, proper_nouns_ratio, ))
-
-
-commands['pos_metrics'] = PartsOfSpeech
