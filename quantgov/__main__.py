@@ -123,8 +123,8 @@ def parse_args():
         'corpus', type=quantgov.load_driver,
         help='Path to a QuantGov corpus')
     estimate.add_argument(
-        '--probability', action='store_true',
-        help='output probabilities instead of predictions')
+        '--predictions', action='store_true',
+        help='output predictions instead of probabilities')
     estimate.add_argument(
         '--precision', default=4, type=int,
         help='number of decimal places to round the probabilities')
@@ -197,7 +197,7 @@ def run_estimator(args):
     elif args.subcommand == "estimate":
         writer = csv.writer(args.outfile)
         labels = args.corpus.index_labels
-        if args.probability:
+        if not args.predictions:
             if args.estimator.multilabel:
                 if args.estimator.multiclass:
                     writer.writerow(labels + ('label', 'class', 'probability'))

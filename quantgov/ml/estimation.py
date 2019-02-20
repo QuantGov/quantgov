@@ -149,7 +149,7 @@ def estimate_probability_multilabel_multiclass(estimator, streamer, precision):
     )
 
 
-def estimate(estimator, corpus, probability, precision=4):
+def estimate(estimator, corpus, probability=True, precision=4):
     """
     Estimate label values for documents in corpus
 
