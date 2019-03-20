@@ -23,7 +23,7 @@ def test_simple_estimator():
     output = check_output(
         ['quantgov', 'ml', 'estimate',
          str(PSEUDO_ESTIMATOR_PATH.joinpath('data', 'binary.qge')),
-         str(PSEUDO_CORPUS_PATH)]
+         str(PSEUDO_CORPUS_PATH), '--prediction']
     )
     assert output == 'file,is_world\ncfr,False\nmoby,False\n'
 
@@ -32,7 +32,7 @@ def test_probability_estimator():
     output = check_output(
         ['quantgov', 'ml', 'estimate',
          str(PSEUDO_ESTIMATOR_PATH.joinpath('data', 'binary.qge')),
-         str(PSEUDO_CORPUS_PATH), '--probability']
+         str(PSEUDO_CORPUS_PATH)]
     )
     assert output == ('file,is_world_prob\ncfr,0.0899\nmoby,0.0216\n')
 
@@ -41,7 +41,7 @@ def test_probability_estimator_6decimals():
     output = check_output(
         ['quantgov', 'ml', 'estimate',
          str(PSEUDO_ESTIMATOR_PATH.joinpath('data', 'binary.qge')),
-         str(PSEUDO_CORPUS_PATH), '--probability', '--precision', '6']
+         str(PSEUDO_CORPUS_PATH), '--precision', '6']
     )
     assert output == ('file,is_world_prob\ncfr,0.089898\nmoby,0.02162\n')
 
@@ -50,7 +50,7 @@ def test_multiclass_probability_estimator():
     output = check_output(
         ['quantgov', 'ml', 'estimate',
          str(PSEUDO_ESTIMATOR_PATH.joinpath('data', 'multiclass.qge')),
-         str(PSEUDO_CORPUS_PATH), '--probability']
+         str(PSEUDO_CORPUS_PATH)]
     )
     assert output == ('file,class,probability\n'
                       'cfr,business-and-industry,0.1765\n'
