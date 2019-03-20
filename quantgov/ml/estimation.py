@@ -149,7 +149,7 @@ def estimate_probability_multilabel_multiclass(estimator, streamer, precision):
     )
 
 
-def estimate(estimator, corpus, probability=True, precision=4):
+def estimate(estimator, corpus, prediction=False, precision=4):
     """
     Estimate label values for documents in corpus
 
@@ -161,7 +161,7 @@ def estimate(estimator, corpus, probability=True, precision=4):
         * **precision**: precision for probability prediction
     """
     streamer = corpus.get_streamer()
-    if probability:
+    if not prediction:
         if estimator.multilabel:
             if estimator.multiclass:  # Multilabel-multiclass probability
                 yield from estimate_probability_multilabel_multiclass(
