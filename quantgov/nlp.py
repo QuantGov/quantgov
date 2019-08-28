@@ -51,7 +51,7 @@ def check_textblob(func, *args, **kwargs):
 
 @decorator
 def check_textstat(func, *args, **kwargs):
-    if textstate is None:
+    if textstat is None:
         raise RuntimeError('Must install teststat to use {}'.format(func))
     return func(*args, **kwargs)
 
@@ -263,12 +263,11 @@ class SentenceLength():
         # Allows for rounding to a specified number of decimals
         if precision:
             return doc.index + (round(sum(len(
-                sentence.words) for sentence in sentences) /
-                len(sentences), int(precision)),)
+                sentence.words) for sentence in sentences) / len(sentences),
+                int(precision)),)
         else:
             return doc.index + (sum(len(
-                sentence.words) for sentence in sentences) /
-                len(sentences),)
+                sentence.words) for sentence in sentences) / len(sentences),)
 
 
 commands['sentence_length'] = SentenceLength
@@ -311,12 +310,12 @@ class SentimentAnalysis():
             sentiment = textblob.TextBlob(doc.text)
             # Allows for rounding to a specified number of decimals
             if precision:
-                return (doc.index +
-                        (round(sentiment.polarity, int(precision)),
-                            round(sentiment.subjectivity, int(precision)),))
+                return (doc.index + (round(
+                        sentiment.polarity, int(precision)),
+                    round(sentiment.subjectivity, int(precision)),))
             else:
-                return (doc.index +
-                        (sentiment.polarity, sentiment.subjectivity,))
+                return (doc.index + (sentiment.polarity,
+                                     sentiment.subjectivity,))
 
 
 commands['sentiment_analysis'] = SentimentAnalysis
