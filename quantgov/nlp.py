@@ -1,9 +1,10 @@
 """
 quantgov.nlp: Text-based analysis of documents
 """
-import re
 import collections
 import math
+import re
+import textstat
 
 from decorator import decorator
 
@@ -308,3 +309,23 @@ class SentimentAnalysis():
 
 
 commands['sentiment_analysis'] = SentimentAnalysis
+
+
+class flesch_reading_ease():
+
+    cli = utils.CLISpec(
+        help='Flesch Reading Ease'
+    )
+
+    @staticmethod
+    def get_columns(args):
+        return ('flesch_reading_ease',)
+
+    @staticmethod
+    def process_document(doc):
+        score = textstat.flesch_reading_ease(doc.text)
+        # Allows for rounding to a specified number of decimals
+        return doc.index + (int(score),)
+
+
+commands['flesch_reading_ease'] = SentenceLength
