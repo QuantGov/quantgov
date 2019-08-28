@@ -311,10 +311,11 @@ class SentimentAnalysis():
 commands['sentiment_analysis'] = SentimentAnalysis
 
 
-class flesch_reading_ease():
+class FleschReadingEase():
 
     cli = utils.CLISpec(
-        help='Flesch Reading Ease'
+        help='Flesch Reading Ease metric',
+        arguments=[]
     )
 
     @staticmethod
@@ -328,4 +329,25 @@ class flesch_reading_ease():
         return doc.index + (int(score),)
 
 
-commands['flesch_reading_ease'] = SentenceLength
+commands['flesch_reading_ease'] = FleschReadingEase
+
+
+class TextStandard():
+
+    cli = utils.CLISpec(
+        help='combines all of the readability metrics in textstats',
+        arguments=[]
+    )
+
+    @staticmethod
+    def get_columns(args):
+        return ('text_standard',)
+
+    @staticmethod
+    def process_document(doc):
+        score = textstat.text_standard(doc.text)
+        # Allows for rounding to a specified number of decimals
+        return doc.index + (score,)
+
+
+commands['text_standard'] = TextStandard
