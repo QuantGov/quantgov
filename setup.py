@@ -58,6 +58,7 @@ setup(
         'requests',
         'scikit-learn',
         'scipy',
+        'textstat'
     ],
     extras_require={
         'testing': ['pytest-flake8'],

@@ -1,9 +1,9 @@
 """
 quantgov.nlp: Text-based analysis of documents
 """
-import re
 import collections
 import math
+import re
 
 from decorator import decorator
 
@@ -19,6 +19,11 @@ try:
     import textblob
 except ImportError:
     textblob = None
+
+try:
+    import textstat
+except ImportError:
+    textstat = None
 
 if NLTK:
     try:
@@ -41,6 +46,13 @@ def check_nltk(func, *args, **kwargs):
 def check_textblob(func, *args, **kwargs):
     if textblob is None:
         raise RuntimeError('Must install textblob to use {}'.format(func))
+    return func(*args, **kwargs)
+
+
+@decorator
+def check_textstat(func, *args, **kwargs):
+    if textstat is None:
+        raise RuntimeError('Must install teststat to use {}'.format(func))
     return func(*args, **kwargs)
 
 
@@ -251,12 +263,11 @@ class SentenceLength():
         # Allows for rounding to a specified number of decimals
         if precision:
             return doc.index + (round(sum(len(
-                sentence.words) for sentence in sentences) /
-                len(sentences), int(precision)),)
+                sentence.words) for sentence in sentences) / len(sentences),
+                int(precision)),)
         else:
             return doc.index + (sum(len(
-                sentence.words) for sentence in sentences) /
-                len(sentences),)
+                sentence.words) for sentence in sentences) / len(sentences),)
 
 
 commands['sentence_length'] = SentenceLength
@@ -299,12 +310,56 @@ class SentimentAnalysis():
             sentiment = textblob.TextBlob(doc.text)
             # Allows for rounding to a specified number of decimals
             if precision:
-                return (doc.index +
-                        (round(sentiment.polarity, int(precision)),
-                            round(sentiment.subjectivity, int(precision)),))
+                return (doc.index + (round(
+                        sentiment.polarity, int(precision)),
+                    round(sentiment.subjectivity, int(precision)),))
             else:
-                return (doc.index +
-                        (sentiment.polarity, sentiment.subjectivity,))
+                return (doc.index + (sentiment.polarity,
+                                     sentiment.subjectivity,))
 
 
 commands['sentiment_analysis'] = SentimentAnalysis
+
+
+class FleschReadingEase():
+
+    cli = utils.CLISpec(
+        help='Flesch Reading Ease metric',
+        arguments=[]
+    )
+
+    @staticmethod
+    def get_columns(args):
+        return ('flesch_reading_ease',)
+
+    @staticmethod
+    @check_textstat
+    def process_document(doc):
+        score = textstat.flesch_reading_ease(doc.text)
+        # Allows for rounding to a specified number of decimals
+        return doc.index + (int(score),)
+
+
+commands['flesch_reading_ease'] = FleschReadingEase
+
+
+class TextStandard():
+
+    cli = utils.CLISpec(
+        help='combines all of the readability metrics in textstats',
+        arguments=[]
+    )
+
+    @staticmethod
+    def get_columns(args):
+        return ('text_standard',)
+
+    @staticmethod
+    @check_textstat
+    def process_document(doc):
+        score = textstat.text_standard(doc.text)
+        # Allows for rounding to a specified number of decimals
+        return doc.index + (score,)
+
+
+commands['text_standard'] = TextStandard
