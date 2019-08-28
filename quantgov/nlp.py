@@ -4,7 +4,6 @@ quantgov.nlp: Text-based analysis of documents
 import collections
 import math
 import re
-import textstat
 
 from decorator import decorator
 
@@ -20,6 +19,11 @@ try:
     import textblob
 except ImportError:
     textblob = None
+
+try:
+    import textstat
+except ImportError:
+    textstat = None
 
 if NLTK:
     try:
@@ -42,6 +46,13 @@ def check_nltk(func, *args, **kwargs):
 def check_textblob(func, *args, **kwargs):
     if textblob is None:
         raise RuntimeError('Must install textblob to use {}'.format(func))
+    return func(*args, **kwargs)
+
+
+@decorator
+def check_textstat(func, *args, **kwargs):
+    if textstate is None:
+        raise RuntimeError('Must install teststat to use {}'.format(func))
     return func(*args, **kwargs)
 
 
@@ -323,6 +334,7 @@ class FleschReadingEase():
         return ('flesch_reading_ease',)
 
     @staticmethod
+    @check_textstat
     def process_document(doc):
         score = textstat.flesch_reading_ease(doc.text)
         # Allows for rounding to a specified number of decimals
@@ -344,6 +356,7 @@ class TextStandard():
         return ('text_standard',)
 
     @staticmethod
+    @check_textstat
     def process_document(doc):
         score = textstat.text_standard(doc.text)
         # Allows for rounding to a specified number of decimals

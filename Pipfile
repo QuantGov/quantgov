@@ -4,7 +4,8 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-"e1839a8" = {path = ".", extras = ["nlp", "s3driver"], editable = true}
+e1839a8 = {path = ".",extras = ["nlp", "s3driver"],editable = true}
+textstat = "*"
 
 [dev-packages]
 "pytest-flake8" = "*"
