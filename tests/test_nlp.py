@@ -115,7 +115,7 @@ def test_wordcount():
 def test_wordcount_pattern():
     output = check_output(
         ['quantgov', 'nlp', 'count_words', str(PSEUDO_CORPUS_PATH),
-         '--word_pattern', '\S+']
+         '--word_pattern', r'\S+']
     )
     assert output == 'file,words\ncfr,333237\nmoby,210130\n'
 
@@ -181,14 +181,6 @@ def test_sentencelength():
         ['quantgov', 'nlp', 'sentence_length', str(PSEUDO_CORPUS_PATH)],
     )
     assert output == 'file,sentence_length\ncfr,18.68\nmoby,25.09\n'
-
-
-def test_sentencelength_4decimals():
-    output = check_output(
-        ['quantgov', 'nlp', 'sentence_length', str(PSEUDO_CORPUS_PATH),
-         '--precision', '4'],
-    )
-    assert output == 'file,sentence_length\ncfr,18.6827\nmoby,25.0936\n'
 
 
 def test_sentiment_analysis():
