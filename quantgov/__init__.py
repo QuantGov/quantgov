@@ -4,4 +4,4 @@ from __future__ import (absolute_import, division, print_function,
 from . import corpus, nlp, ml, utils
 from .utils import load_driver
 
-__version__ = '0.6.0'
+__version__ = '0.6.1'
