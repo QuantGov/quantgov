@@ -260,9 +260,10 @@ class SentenceLength():
     @check_textblob
     def process_document(doc, precision):
         sentences = textblob.TextBlob(doc.text).sentences
-        # Allows for rounding to a specified number of decimals
+        # Returns sentence_length = 0 if no complete sentences are found
         if len(sentences) == 0:
             return doc.index + (0,)
+        # Allows for rounding to a specified number of decimals
         if precision:
             return doc.index + (round(sum(len(
                 sentence.words) for sentence in sentences) / len(sentences),
