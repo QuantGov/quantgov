@@ -179,9 +179,10 @@ def run_corpus_builtin(args):
         builtin.process_document,
         **func_args
     )
-    for i in quantgov.utils.lazy_parallel(partial, driver.stream()):
-        writer.writerow(i)
-        args.outfile.flush()
+    for result in quantgov.utils.lazy_parallel(partial, driver.stream()):
+        if result:
+            writer.writerow(result)
+            args.outfile.flush()
 
 
 def run_estimator(args):
