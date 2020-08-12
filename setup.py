@@ -37,7 +37,7 @@ setup(
     long_description=long_description,
     url='https://www.quantgov.org',
     author='Oliver Sherouse',
-    author_email='osherouse@mercatus.gmu.edu',
+    author_email='quantgov.info@gmail.com',
     license='MIT',
     classifiers=[
         'Development Status :: 3 - Alpha',

@@ -247,6 +247,15 @@ class SentenceLength():
                     'help': 'decimal places to round',
                     'default': 2
                 }
+            ),
+            utils.CLIArg(
+                flags=('--threshold'),
+                kwargs={
+                    'help': ('maximum average sentence length to allow '
+                             '(set to 0 for no filtering)'),
+                    'type': int,
+                    'default': 100
+                }
             )
         ]
     )
@@ -258,19 +267,23 @@ class SentenceLength():
     @staticmethod
     @check_nltk
     @check_textblob
-    def process_document(doc, precision):
+    def process_document(doc, precision, threshold):
         sentences = textblob.TextBlob(doc.text).sentences
-        # Returns sentence_length = 0 if no complete sentences are found
-        if len(sentences) == 0:
-            return doc.index + (0,)
+        if not len(sentences):
+            return doc.index + (None,)
         # Allows for rounding to a specified number of decimals
-        if precision:
-            return doc.index + (round(sum(len(
+        elif precision:
+            sentence_length = round(sum(len(
                 sentence.words) for sentence in sentences) / len(sentences),
-                int(precision)),)
+                int(precision))
         else:
-            return doc.index + (sum(len(
-                sentence.words) for sentence in sentences) / len(sentences),)
+            sentence_length = sum(len(
+                sentence.words) for sentence in sentences) / len(sentences)
+        # Filters values based on threshold
+        if not threshold or sentence_length < threshold:
+            return doc.index + (sentence_length,)
+        else:
+            return doc.index + (None,)
 
 
 commands['sentence_length'] = SentenceLength
@@ -328,7 +341,17 @@ class FleschReadingEase():
 
     cli = utils.CLISpec(
         help='Flesch Reading Ease metric',
-        arguments=[]
+        arguments=[
+            utils.CLIArg(
+                flags=('--threshold'),
+                kwargs={
+                    'help': ('minimum score to allow '
+                             '(set to 0 for no filtering)'),
+                    'type': int,
+                    'default': -100
+                }
+            )
+        ]
     )
 
     @staticmethod
@@ -337,10 +360,13 @@ class FleschReadingEase():
 
     @staticmethod
     @check_textstat
-    def process_document(doc):
+    def process_document(doc, threshold):
         score = textstat.flesch_reading_ease(doc.text)
-        # Allows for rounding to a specified number of decimals
-        return doc.index + (int(score),)
+        # Filters values based on threshold
+        if not threshold or score > threshold:
+            return doc.index + (int(score),)
+        else:
+            return doc.index + (None,)
 
 
 commands['flesch_reading_ease'] = FleschReadingEase
