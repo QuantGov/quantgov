@@ -65,3 +65,14 @@ def test_multiclass_probability_estimator():
                       'moby,money,0.1536\n'
                       'moby,science-and-technology,0.1671\n'
                       'moby,world,0.141\n')
+
+
+def test_multiclass_probability_oneclass_estimator():
+    output = check_output(
+        ['quantgov', 'ml', 'estimate',
+         str(PSEUDO_ESTIMATOR_PATH.joinpath('data', 'multiclass.qge')),
+         str(PSEUDO_CORPUS_PATH), '--probability', '--oneclass']
+    )
+    assert output == ('file,class,probability\n'
+                      'cfr,world,0.1997\n'
+                      'moby,health-and-public-welfare,0.205\n')

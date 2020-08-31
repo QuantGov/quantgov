@@ -4,6 +4,7 @@ quantgov.ml.estimation
 Functionality for making predictions with an estimator
 """
 import logging
+import numpy as np
 
 log = logging.getLogger(__name__)
 
@@ -106,7 +107,7 @@ def estimate_probability_multilabel(estimator, streamer, precision):
         )
 
 
-def estimate_probability_multiclass(estimator, streamer, precision):
+def estimate_probability_multiclass(estimator, streamer, precision, oneclass):
     """
     Generate probabilities for a one-label, multiclass estimator
 
@@ -119,12 +120,24 @@ def estimate_probability_multiclass(estimator, streamer, precision):
 
     """
     texts = (doc.text for doc in streamer)
-    probs = estimator.pipeline.predict_proba(texts).round(precision)
-    yield from (
-        (docidx, (class_, probability))
-        for docidx, doc_probs in zip(streamer.index, probs)
-        for class_, probability in zip(estimator.pipeline.classes_, doc_probs)
-    )
+    probs = estimator.pipeline.predict_proba(texts)
+    # If oneclass flag is true, only returns the predicted class
+    if oneclass:
+        class_indices = list(i[-1] for i in np.argsort(probs, axis=1))
+        yield from (
+            (docidx, (estimator.pipeline.classes_[class_index],
+                      doc_probs[class_index].round(precision)))
+            for docidx, doc_probs, class_index in zip(
+                streamer.index, probs, class_indices)
+        )
+    # Else returns probabilty values for all classes
+    else:
+        yield from (
+            (docidx, (class_, probability.round(precision)))
+            for docidx, doc_probs in zip(streamer.index, probs)
+            for class_, probability in zip(
+                estimator.pipeline.classes_, doc_probs)
+        )
 
 
 def estimate_probability_multilabel_multiclass(estimator, streamer, precision):
@@ -140,7 +153,7 @@ def estimate_probability_multilabel_multiclass(estimator, streamer, precision):
 
     """
     texts = (doc.text for doc in streamer)
-    probs = estimator.pipeline.predict_proba(texts)
+    probs = estimator.pipeline.predict_proba(texts).round(precision)
     yield from (
         (docidx, (label_name, class_, prob))
         for label_name, label_probs in zip(estimator.label_names, probs)
@@ -149,7 +162,8 @@ def estimate_probability_multilabel_multiclass(estimator, streamer, precision):
     )
 
 
-def estimate(estimator, corpus, probability, precision=4, *args, **kwargs):
+def estimate(estimator, corpus, probability, precision=4, oneclass=False,
+             *args, **kwargs):
     """
     Estimate label values for documents in corpus
 
@@ -171,7 +185,7 @@ def estimate(estimator, corpus, probability, precision=4, *args, **kwargs):
                     estimator, streamer, precision)
         elif estimator.multiclass:  # Multiclass probability
             yield from estimate_probability_multiclass(
-                estimator, streamer, precision)
+                estimator, streamer, precision, oneclass)
         else:  # Simple probability
             yield from estimate_probability(
                 estimator, streamer, precision)
