@@ -22,25 +22,25 @@ import quantgov.ml
 
 classification = [
     quantgov.ml.CandidateModel(
-        name="Random Forests",
-        model=sklearn.pipeline.Pipeline(steps=(
-            ('tfidf', sklearn.feature_extraction.text.TfidfTransformer()),
-            ('rf', sklearn.ensemble.RandomForestClassifier(n_jobs=-1)),
-        )),
-        parameters={
-            'rf__n_estimators': [5, 10, 25, 50, 100],
-        }
-    ),
-    quantgov.ml.CandidateModel(
         name="Logistic Regression",
         model=sklearn.pipeline.Pipeline(steps=(
             ('tfidf', sklearn.feature_extraction.text.TfidfTransformer()),
-            ('logit', sklearn.linear_model.LogisticRegression()),
+            ('logit', sklearn.linear_model.LogisticRegression(max_iter=10000)),
         )),
         parameters={
-            'logit__C': np.logspace(-2, 2, 5)
+            'logit__C': [10, 100, 1000]
         }
     ),
+    quantgov.ml.CandidateModel(
+        name="SVM",
+        model=sklearn.pipeline.Pipeline(steps=(
+            ('tfidf', sklearn.feature_extraction.text.TfidfTransformer()),
+            ('svm', sklearn.svm.SVC(kernel='linear', class_weight='balanced')),
+        )),
+        parameters={
+            'svm__C': [1, 10, 100, 1000]
+        }
+    )
 ]
 
 
