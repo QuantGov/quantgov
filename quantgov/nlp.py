@@ -194,7 +194,7 @@ class EnhancedOccurrenceCounter():
         term_pattern = re.compile(
             pattern.format('|'.join(terms_sorted)), re.IGNORECASE)
         point_pattern = re.compile(point_pattern)
-        preamble_pattern = re.compile(r':$', re.MULTILINE)
+        preamble_pattern = re.compile(r'[:—]$', re.MULTILINE)
         # If no bullet point formatting, run standard analysis
         if (not point_pattern.search(doc.text)
                 or not preamble_pattern.search(doc.text)):
@@ -227,7 +227,7 @@ class EnhancedOccurrenceCounter():
             return (np.array(list(term_counts.values())),
                     np.array(list(extra_term_counts.values())))
 
-        def get_format(text):
+        def get_format(text, line=False):
             # (i) (ii) format
             if re.search(r"^\([ivx]+\)", text):
                 return r"^\([ivx]+\)"
@@ -254,9 +254,12 @@ class EnhancedOccurrenceCounter():
                 return r"^\d{1,2}\."
             # none of the above format
             else:
-                return (r"^(?!^\([ivx]{1,4}\)|^\([a-hj-r]{1,2}\)|"
-                        r"^\([A-HJ-R]{1,2}\)|^\(\d{1,2}\)|^[ivx]{1,4}|"
-                        r"^[a-hj-r]{1,2}\.|^[A-HJ-R]{1,2}\.|^\d{1,2}\.)")
+                if line:
+                    return ''
+                else:
+                    return (r"^(?!^\([ivx]{1,4}\)|^\([a-hj-r]{1,2}\)|"
+                            r"^\([A-HJ-R]{1,2}\)|^\(\d{1,2}\)|^[ivx]{1,4}|"
+                            r"^[a-hj-r]{1,2}\.|^[A-HJ-R]{1,2}\.|^\d{1,2}\.)")
 
         empty_counter = collections.Counter()
         for t in terms:
@@ -287,10 +290,16 @@ class EnhancedOccurrenceCounter():
                 else:
                     preamble_formatting.pop()
                     line_formatting = ''
-            # If the line ends in a ":" and contains keywords,
+            # If the line ends in a ":" or "—" and contains keywords,
             # the line is considered to be a preamble
-            if line.endswith(":"):
+            if preamble_pattern.search(line):
                 preamble_terms, extra_term_counts = count_preamble_terms(line)
+                # Add to line count of parent preamble, if nested preamble
+                if preamble_formatting:
+                    if len(line_count) != len(preamble_formatting):
+                        line_count.append(1)
+                    else:
+                        line_count[-1] += 1
                 if preamble_terms.any():
                     preamble_term_counts.append(preamble_terms)
                     preamble_formatting.append(get_format(line))
@@ -298,9 +307,9 @@ class EnhancedOccurrenceCounter():
                     line_formatting = ''
             # If bullet pount, add to line count
             # and add any extra terms to total count
-            elif point_pattern.search(line) and preamble_formatting:
+            elif get_format(text, line=False) and preamble_formatting:
                 if not line_formatting:
-                    line_formatting = get_format(line)
+                    line_formatting = get_format(line, line=True)
                 if len(line_count) != len(preamble_formatting):
                     line_count.append(1)
                 else:
@@ -309,6 +318,14 @@ class EnhancedOccurrenceCounter():
             # For all other lines, add terms to total count
             else:
                 total_count += count_line_terms(line)
+                # Count preamble terms if not a real list
+                if preamble_formatting and not line_formatting:
+                    total_count += preamble_term_counts[-1]
+                    preamble_term_counts.pop()
+                    if len(preamble_formatting) > 1:
+                        line_formatting = preamble_formatting.pop()
+                    else:
+                        preamble_formatting.pop()
         # If leftover counts, add them
         if preamble_formatting:
             if not line_count:
