@@ -106,8 +106,12 @@ class Estimator(
                     is_multiclass(i.classes_)
                     for i in model.steps[-1][-1].estimators_
                 )
+        # This allows for pipelines without estimators and classes (Keras)
         else:
-            self.multiclass = is_multiclass(model.classes_)
+            if model:
+                self.multiclass = is_multiclass(model.classes_)
+            else:
+                self.multiclass = None
 
 
 class CandidateModel(
