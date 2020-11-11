@@ -178,6 +178,13 @@ class EnhancedOccurrenceCounter():
                     'help': 'pattern to use in identifying bullet points',
                     'default': r'\(.{1,4}\)|^.\.|;$|\d\d?-\d\d?-\d\d?-\d\d?\.'
                 }
+            ),
+            utils.CLIArg(
+                flags=('--line_split'),
+                kwargs={
+                    'help': 'character on which to split lines',
+                    'default': '\n'
+                }
             )
         ]
     )
@@ -189,7 +196,7 @@ class EnhancedOccurrenceCounter():
         return tuple(args['terms'])
 
     @staticmethod
-    def process_document(doc, terms, pattern, point_pattern, total_label):
+    def process_document(doc, terms, pattern, point_pattern, line_split, total_label):
         terms_sorted = sorted(terms, key=len, reverse=True)
         term_pattern = re.compile(
             pattern.format('|'.join(terms_sorted)), re.IGNORECASE)
@@ -269,7 +276,7 @@ class EnhancedOccurrenceCounter():
         preamble_formatting = []
         line_count = []
         line_formatting = ''
-        for line in doc.text.split('\n'):
+        for line in doc.text.split(line_split):
             line = line.strip()
             # Skip empty lines
             if not line:
@@ -307,7 +314,7 @@ class EnhancedOccurrenceCounter():
                     line_formatting = ''
             # If bullet pount, add to line count
             # and add any extra terms to total count
-            elif get_format(text, line=False) and preamble_formatting:
+            elif get_format(line, line=False) and preamble_formatting:
                 if not line_formatting:
                     line_formatting = get_format(line, line=True)
                 if len(line_count) != len(preamble_formatting):

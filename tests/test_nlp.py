@@ -153,7 +153,7 @@ def test_enhanced_termcount():
          'shall', 'must', 'may not', '--total_label', 'allofthem'],
     )
     assert output == ('file,shall,must,may not,allofthem\n'
-                      'cfr,1960,758,120,2838\nmoby,94,286,5,385\n')
+                      'cfr,1993,768,120,2881\nmoby,94,2447,5,2546\n')
 
 
 def test_shannon_entropy():
