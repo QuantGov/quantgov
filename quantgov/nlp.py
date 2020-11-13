@@ -201,7 +201,7 @@ class EnhancedOccurrenceCounter():
         term_pattern = re.compile(
             pattern.format('|'.join(terms_sorted)), re.IGNORECASE)
         point_pattern = re.compile(point_pattern)
-        preamble_pattern = re.compile(r'[:—]$', re.MULTILINE)
+        preamble_pattern = re.compile(r'[:—-]$', re.MULTILINE)
         # If no bullet point formatting, run standard analysis
         if (not point_pattern.search(doc.text)
                 or not preamble_pattern.search(doc.text)):
@@ -314,7 +314,7 @@ class EnhancedOccurrenceCounter():
                     line_formatting = ''
             # If bullet pount, add to line count
             # and add any extra terms to total count
-            elif get_format(line, line=False) and preamble_formatting:
+            elif get_format(line, line=True) and preamble_formatting:
                 if not line_formatting:
                     line_formatting = get_format(line, line=True)
                 if len(line_count) != len(preamble_formatting):
@@ -329,6 +329,8 @@ class EnhancedOccurrenceCounter():
                 if preamble_formatting and not line_formatting:
                     total_count += preamble_term_counts[-1]
                     preamble_term_counts.pop()
+                    if line_count:
+                        line_count.pop()
                     if len(preamble_formatting) > 1:
                         line_formatting = preamble_formatting.pop()
                     else:
