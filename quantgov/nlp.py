@@ -201,10 +201,11 @@ class EnhancedOccurrenceCounter():
         term_pattern = re.compile(
             pattern.format('|'.join(terms_sorted)), re.IGNORECASE)
         point_pattern = re.compile(point_pattern)
-        preamble_pattern = re.compile(r'[:—-]$', re.MULTILINE)
+        preamble_pattern_multiline = re.compile(r'[:—-]$', re.MULTILINE)
+        preamble_pattern = re.compile(r'[:—-]$')
         # If no bullet point formatting, run standard analysis
         if (not point_pattern.search(doc.text)
-                or not preamble_pattern.search(doc.text)):
+                or not preamble_pattern_multiline.search(doc.text)):
             return OccurrenceCounter.process_document(
                 doc, terms, pattern, total_label)
 
@@ -219,13 +220,29 @@ class EnhancedOccurrenceCounter():
         def count_preamble_terms(line):
             term_counts = empty_counter.copy()
             extra_term_counts = empty_counter.copy()
-            if len(term_pattern.findall(line)) > 1:
+            preamble = line.split('. ')
+            # More than one sentence and last sentence contains a term
+            if len(preamble) > 1 and term_pattern.findall(preamble[-1]):
+                term_counts.update(collections.Counter([
+                    term_pattern.findall(preamble[-1])[-1].lower()
+                ]))
+                extra_term_counts.update(collections.Counter(
+                    i.lower() for i in term_pattern.findall(line)[:-1]
+                ))
+            # More than one sentence but last sentence contains no terms
+            elif len(preamble) > 1 and not term_pattern.findall(preamble[-1]):
+                extra_term_counts.update(collections.Counter(
+                    i.lower() for i in term_pattern.findall(line)
+                ))
+            # One sentence but more than one term
+            elif len(term_pattern.findall(line)) > 1:
                 term_counts.update(collections.Counter([
                     term_pattern.findall(line)[-1].lower()
                 ]))
                 extra_term_counts.update(collections.Counter(
                     i.lower() for i in term_pattern.findall(line)[:-1]
                 ))
+            # One sentence and only one term
             else:
                 term_counts.update(collections.Counter(
                     i.groupdict()['match'].lower()
