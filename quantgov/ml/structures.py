@@ -108,7 +108,9 @@ class Estimator(
                 )
         # This allows for pipelines without estimators and classes (Keras)
         else:
-            if model:
+            if 'tensor' in str(model):
+                self.multiclass = None
+            elif model:
                 self.multiclass = is_multiclass(model.classes_)
             else:
                 self.multiclass = None
