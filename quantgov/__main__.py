@@ -129,6 +129,9 @@ def parse_args():
         '--precision', default=4, type=int,
         help='number of decimal places to round the probabilities')
     estimate.add_argument(
+        '--oneclass', action='store_true',
+        help='only return predicted class for multiclass probabilty estimates')
+    estimate.add_argument(
         '-o', '--outfile',
         type=lambda x: open(x, 'w', newline='', encoding='utf-8'),
         default=sys.stdout,
@@ -223,7 +226,8 @@ def run_estimator(args):
                 args.estimator,
                 args.corpus,
                 args.probability,
-                args.precision)
+                args.precision,
+                args.oneclass)
         )
 
 
