@@ -324,21 +324,20 @@ class EnhancedOccurrenceCounter():
                         line_count.append(1)
                     else:
                         line_count[-1] += 1
-                if preamble_terms.any():
-                    preamble_term_counts.append(preamble_terms)
-                    preamble_formatting.append(get_format(line))
-                    total_count += extra_term_counts
-                    line_formatting = ''
+                preamble_term_counts.append(preamble_terms)
+                preamble_formatting.append(get_format(line))
+                total_count += extra_term_counts
+                line_formatting = ''
+                line_count.append(0)
             # If bullet pount, add to line count
             # and add any extra terms to total count
             elif get_format(line, line=True) and preamble_formatting:
                 if not line_formatting:
                     line_formatting = get_format(line, line=True)
-                if len(line_count) != len(preamble_formatting):
-                    line_count.append(1)
-                else:
-                    line_count[-1] += 1
-                total_count += count_line_terms(line)
+                line_count[-1] += 1
+                # Only count terms in line if different from preamble
+                if (count_line_terms(line) != preamble_term_counts[-1]).any():
+                    total_count += count_line_terms(line)
             # For all other lines, add terms to total count
             else:
                 total_count += count_line_terms(line)
@@ -353,10 +352,13 @@ class EnhancedOccurrenceCounter():
                     else:
                         preamble_formatting.pop()
         # If leftover counts, add them
-        if preamble_formatting:
+        while preamble_formatting:
             if not line_count:
                 line_count.append(1)
             total_count += line_count[-1] * preamble_term_counts[-1]
+            preamble_formatting.pop()
+            preamble_term_counts.pop()
+            line_count.pop()
         if total_label:
             return (
                 doc.index
