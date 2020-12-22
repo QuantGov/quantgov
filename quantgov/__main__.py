@@ -129,6 +129,9 @@ def parse_args():
         '--precision', default=4, type=int,
         help='number of decimal places to round the probabilities')
     estimate.add_argument(
+        '--oneclass', action='store_true',
+        help='only return predicted class for multiclass probabilty estimates')
+    estimate.add_argument(
         '-o', '--outfile',
         type=lambda x: open(x, 'w', newline='', encoding='utf-8'),
         default=sys.stdout,
@@ -179,9 +182,10 @@ def run_corpus_builtin(args):
         builtin.process_document,
         **func_args
     )
-    for i in quantgov.utils.lazy_parallel(partial, driver.stream()):
-        writer.writerow(i)
-        args.outfile.flush()
+    for result in quantgov.utils.lazy_parallel(partial, driver.stream()):
+        if result:
+            writer.writerow(result)
+            args.outfile.flush()
 
 
 def run_estimator(args):
@@ -222,7 +226,8 @@ def run_estimator(args):
                 args.estimator,
                 args.corpus,
                 args.probability,
-                args.precision)
+                args.precision,
+                args.oneclass)
         )
 
 

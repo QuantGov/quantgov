@@ -83,11 +83,11 @@ class CorpusDriver(object):
                     "Index Labels must be a string or sequence of strings")
         self.index_labels = index_labels
 
-    def get_streamer(self):
+    def get_streamer(self, *args, **kwargs):
         """
         Return a CorpusStreamer object that wraps this corpus's stream method.
         """
-        return CorpusStreamer(self.stream())
+        return CorpusStreamer(self.stream(*args, **kwargs))
 
     def stream(self):
         """
