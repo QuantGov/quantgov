@@ -27,6 +27,18 @@ def estimate_simple(estimator, streamer):
         yield docidx, (prediction,)
 
 
+def estimate_probability_deep(estimator, streamer):
+    """
+    Takes care of simple Keras Sequential models, no multi-label or multi-class
+    """
+    texts = (doc.text for doc in streamer)
+    predicted = estimator.pipeline.predict(texts)
+    # Unpacks the list of arrays
+    unlisted = [j for i in predicted for j in i]
+    for docidx, prediction in zip(streamer.index, unlisted):
+        yield docidx, (prediction,)
+
+
 def estimate_multilabel(estimator, streamer):
     """
     Generate predictions for a multi-label estimator
@@ -174,8 +186,11 @@ def estimate(estimator, corpus, probability, precision=4, oneclass=False,
         * **probability**: if True, predict probability
         * **precision**: precision for probability prediction
     """
-    streamer = corpus.get_streamer(*args, **kwargs)
-    if probability:
+    streamer = corpus.get_streamer()
+    if probability == 'deep':  # Catches all deep learning calls
+        yield from estimate_probability_deep(
+            estimator, streamer)
+    elif probability:
         if estimator.multilabel:
             if estimator.multiclass:  # Multilabel-multiclass probability
                 yield from estimate_probability_multilabel_multiclass(
