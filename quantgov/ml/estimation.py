@@ -186,7 +186,7 @@ def estimate(estimator, corpus, probability, precision=4, oneclass=False,
         * **probability**: if True, predict probability
         * **precision**: precision for probability prediction
     """
-    streamer = corpus.get_streamer()
+    streamer = corpus.get_streamer(*args, **kwargs)
     if probability == 'deep':  # Catches all deep learning calls
         yield from estimate_probability_deep(
             estimator, streamer)
