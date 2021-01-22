@@ -184,8 +184,13 @@ def run_corpus_builtin(args):
     )
     for result in quantgov.utils.lazy_parallel(partial, driver.stream()):
         if result:
-            writer.writerow(result)
-            args.outfile.flush()
+            if type(result) == list:
+                for row in result:
+                    writer.writerow(row)
+                    args.outfile.flush()
+            else:
+                writer.writerow(result)
+                args.outfile.flush()
 
 
 def run_estimator(args):

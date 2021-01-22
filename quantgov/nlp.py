@@ -17,6 +17,16 @@ except ImportError:
     NLTK = None
 
 try:
+    import spacy
+    from spacy import displacy
+    from pysbd.utils import PySBDFactory
+    nlp = spacy.load("en_core_web_sm")
+    nlp.max_length = 8000000
+    spacy = True
+except ImportError:
+    spacy = None
+
+try:
     import textblob
 except ImportError:
     textblob = None
@@ -40,6 +50,13 @@ commands = {}
 def check_nltk(func, *args, **kwargs):
     if not NLTK:
         raise RuntimeError('Must install NLTK to use {}'.format(func))
+    return func(*args, **kwargs)
+
+
+@decorator
+def check_spacy(func, *args, **kwargs):
+    if not spacy:
+        raise RuntimeError('Must install spacy to use {}'.format(func))
     return func(*args, **kwargs)
 
 
@@ -369,6 +386,113 @@ class EnhancedOccurrenceCounter():
 
 
 commands['enhanced_count_occurrences'] = EnhancedOccurrenceCounter
+
+
+class SubjectCounter():
+
+    cli = utils.CLISpec(
+        help="Term Counter for Specific Words",
+        arguments=[
+            utils.CLIArg(
+                flags=('terms'),
+                kwargs={
+                    'help': 'list of terms to be counted',
+                    'nargs': '+'
+                }
+            ),
+            utils.CLIArg(
+                flags=('--pattern'),
+                kwargs={
+                    'help': 'pattern to use in identifying words',
+                    'default': r'\b(?P<match>{})\b'
+                }
+            )
+        ]
+    )
+
+    @staticmethod
+    def get_columns(args):
+        return ('full_subject', 'subject', 'term', 'count',)
+
+    @staticmethod
+    def process_document(doc, terms, pattern):
+        terms_sorted = sorted(terms, key=len, reverse=True)
+        term_pattern = re.compile(pattern.format('|'.join(terms_sorted)))
+
+        def clean_text(text):
+            # remove bullet points from beginning of lines
+            text = re.sub(r'\n\( ?\w+ ?\)', '', text)
+            # convert parentheses into commas
+            text = re.sub(r'(?: \(|\) )', ', ', text)
+            # convert colons into periods (only if followed by a new sentence)
+            text = re.sub(r'\: (?=[A-Z])', '. ', text)
+            # remove odd characters
+            text = re.sub(r'[^a-zA-Z\d\'\.\!\?\:\;\,\s]', ' ', text)
+            # remove part numbers (e.g. 50.11) from beginning of lines
+            text = re.sub(r'\n(\d+\.\d+\w? ?)+', '', text)
+            # remove "that" which causes parsing problems
+            text = text.replace('that', '')
+            # remove extraneous whitespaces
+            text = text.replace('\n\r', ' ')
+            return re.sub(r'\s+', ' ', text).strip()
+
+        spacy_text = nlp(clean_text(doc.text))
+        subject_terms = []
+        for sentence in spacy_text.sents:
+            for token in sentence:
+                if term_pattern.search(token.text):
+                    subject = ''
+                    term = token.text
+                    try:
+                        verb = [a for a in token.ancestors if a.dep_ == 'ROOT'][0]
+                    except IndexError:
+                        verb = token
+                    # if ROOT of sentence is not a verb, make term root verb
+                    if verb.pos_ != 'VERB':
+                        verb = token
+                    # if root verb is "apply to," find the noun-object of the sentence
+                    if verb.text == 'apply':
+                        try:
+                            prep = [c for c in verb.children if c.text == 'to'][0]
+                            subject = [c for c in prep.children if 'obj' in c.dep_]
+                        except IndexError:
+                            pass
+                    # find noun-subject for root verb
+                    if not subject:
+                        subject = [c for c in verb.children if 'subj' in c.dep_]
+                    # if no noun-subject, look for a "it" or "there"
+                    if not subject:
+                        subject = [c for c in verb.children if 'expl' in c.dep_]
+                    # if subject a stop word ("he" or "it") and sentence begins with "if",
+                    # look for noun-subject at beginning of sentence
+                    if subject:
+                        if subject[0].is_stop and sentence.text.lower().startswith('if'):
+                            subject = [t for t in sentence if 'nsubj' in t.dep_]
+                    # finally, look for a noun-subject anywhere in the sentence
+                    if not subject:
+                        subject = [t for t in sentence if 'nsubj' in t.dep_]
+                    # if no subject found, return empty string
+                    if not subject:
+                        #subject_terms.append(doc.index + ('', '', term))
+                        continue
+                    subject = subject[0]
+                    try:
+                        # get full noun chunk for word
+                        full_subject = [n for n in sentence.noun_chunks if n.root == subject][0]
+                        # remove stop words from full subject name, only if subject itself is not a stop word
+                        if not subject.is_stop:
+                            full_subject = ' '.join([t.text for t in full_subject if not t.is_stop]).strip()
+                        else:
+                            full_subject = subject.text.strip()
+                    # if subject not in a noun chunk, just use the subject word
+                    except IndexError:
+                        full_subject = subject.text.strip()
+                    subject = subject.text.strip().lower()
+                    subject_terms.append(doc.index + (subject, full_subject.lower(), term))
+        return list(k + (v,) for k, v in collections.Counter(subject_terms).items())
+
+
+commands['count_subjects'] = SubjectCounter
 
 
 class ShannonEntropy():
