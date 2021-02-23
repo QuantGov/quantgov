@@ -2,18 +2,29 @@
 
 import collections
 import concurrent.futures
+import importlib
 import os
 import sys
 
 from pathlib import Path
 
 
-def load_driver(corpus):
-    corpus = Path(corpus)
-    if corpus.name == 'driver.py' or corpus.name == 'timestamp':
+def load_driver(driver_path):
+    """
+    Load quantgov driver from a local file
+
+    Arguments:
+    * driver_path: relative path to the driver file
+    """
+    corpus = Path(driver_path)
+    if not corpus.is_dir():
         corpus = corpus.parent
     sys.path.insert(0, str(corpus))
-    from driver import driver
+    if Path(driver_path).is_dir():
+        mod = importlib.import_module(str(corpus), 'driver')
+    else:
+        mod = importlib.import_module(Path(driver_path).stem)
+    driver = getattr(mod, 'driver')
     sys.path.pop(0)
     return driver
 
@@ -27,7 +38,6 @@ _POOLS = {
 def lazy_parallel(func, *iterables, **kwargs):
     """
     Parallel execution without fully loading iterables
-
 
     Arguments:
     * func: function to call

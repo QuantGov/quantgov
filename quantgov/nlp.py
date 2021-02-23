@@ -208,7 +208,7 @@ class EnhancedOccurrenceCounter():
 
     @staticmethod
     def get_columns(args):
-        if args['total_label'] is not None:
+        if args['total_label']:
             return tuple(args['terms']) + (args['total_label'],)
         return tuple(args['terms'])
 
@@ -222,7 +222,7 @@ class EnhancedOccurrenceCounter():
         preamble_pattern = re.compile(r'[:—-]$')
         # If no bullet point formatting, run standard analysis
         if (not point_pattern.search(doc.text)
-                or not preamble_pattern_multiline.search(doc.text)):
+                and not preamble_pattern_multiline.search(doc.text)):
             return OccurrenceCounter.process_document(
                 doc, terms, pattern, total_label)
 
@@ -382,7 +382,10 @@ class EnhancedOccurrenceCounter():
                 + tuple(total_count)
                 + (sum(total_count),)
             )
-        return (doc.index + total_count)
+        return (
+            doc.index
+            + tuple(total_count)
+        )
 
 
 commands['enhanced_count_occurrences'] = EnhancedOccurrenceCounter
@@ -412,14 +415,16 @@ class SubjectCounter():
 
     @staticmethod
     def get_columns(args):
-        return ('full_subject', 'subject', 'term', 'count',)
+        return ('term', 'subject', 'count',)
 
     @staticmethod
+    @check_spacy
     def process_document(doc, terms, pattern):
         terms_sorted = sorted(terms, key=len, reverse=True)
         term_pattern = re.compile(pattern.format('|'.join(terms_sorted)))
 
         def clean_text(text):
+            '''Text cleaner specifically for this analysis.'''
             # remove bullet points from beginning of lines
             text = re.sub(r'\n\( ?\w+ ?\)', '', text)
             # convert parentheses into commas
@@ -436,7 +441,12 @@ class SubjectCounter():
             text = text.replace('\n\r', ' ')
             return re.sub(r'\s+', ' ', text).strip()
 
-        spacy_text = nlp(clean_text(doc.text))
+        try:
+            spacy_text = nlp(clean_text(doc.text))
+        except ValueError:
+            print(f'Document {doc.index} is too large for spacy. '
+                   'Split into multiple documents and try again.')
+            return
         subject_terms = []
         for sentence in spacy_text.sents:
             for token in sentence:
@@ -473,22 +483,10 @@ class SubjectCounter():
                         subject = [t for t in sentence if 'nsubj' in t.dep_]
                     # if no subject found, return empty string
                     if not subject:
-                        #subject_terms.append(doc.index + ('', '', term))
+                        subject_terms.append(doc.index + (term, ''))
                         continue
-                    subject = subject[0]
-                    try:
-                        # get full noun chunk for word
-                        full_subject = [n for n in sentence.noun_chunks if n.root == subject][0]
-                        # remove stop words from full subject name, only if subject itself is not a stop word
-                        if not subject.is_stop:
-                            full_subject = ' '.join([t.text for t in full_subject if not t.is_stop]).strip()
-                        else:
-                            full_subject = subject.text.strip()
-                    # if subject not in a noun chunk, just use the subject word
-                    except IndexError:
-                        full_subject = subject.text.strip()
-                    subject = subject.text.strip().lower()
-                    subject_terms.append(doc.index + (subject, full_subject.lower(), term))
+                    subject = subject[0].text.strip().lower()
+                    subject_terms.append(doc.index + (term, subject))
         return list(k + (v,) for k, v in collections.Counter(subject_terms).items())
 
 
