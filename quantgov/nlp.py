@@ -205,7 +205,7 @@ class EnhancedOccurrenceCounter():
         preamble_pattern = re.compile(r'[:—-]$')
         # If no bullet point formatting, run standard analysis
         if (not point_pattern.search(doc.text)
-                or not preamble_pattern_multiline.search(doc.text)):
+                and not preamble_pattern_multiline.search(doc.text)):
             return OccurrenceCounter.process_document(
                 doc, terms, pattern, total_label)
 
