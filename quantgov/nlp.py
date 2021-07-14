@@ -13,25 +13,8 @@ from . import utils
 commands = {}
 
 
-@decorator
-def check_nltk(func, *args, **kwargs):
-    if NLTK is None:
-        raise RuntimeError('Must install NLTK to use {}'.format(func))
-    return func(*args, **kwargs)
-
-
-@decorator
-def check_textblob(func, *args, **kwargs):
-    if textblob is None:
-        raise RuntimeError('Must install textblob to use {}'.format(func))
-    return func(*args, **kwargs)
-
-
-@decorator
-def check_textstat(func, *args, **kwargs):
-    if textstat is None:
-        raise RuntimeError('Must install teststat to use {}'.format(func))
-    return func(*args, **kwargs)
+def new_function():
+    pass
 
 
 class WordCounter():
