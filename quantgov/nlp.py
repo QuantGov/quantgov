@@ -9,28 +9,6 @@ from decorator import decorator
 
 from . import utils
 
-try:
-    import nltk.corpus
-    NLTK = True
-except ImportError:
-    NLTK = None
-
-try:
-    import textblob
-except ImportError:
-    textblob = None
-
-try:
-    import textstat
-except ImportError:
-    textstat = None
-
-if NLTK:
-    try:
-        nltk.corpus.wordnet.ensure_loaded()
-    except LookupError:
-        nltk.download('wordnet')
-        nltk.corpus.wordnet.ensure_loaded()
 
 commands = {}
 
