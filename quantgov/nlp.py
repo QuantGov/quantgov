@@ -113,6 +113,13 @@ class OccurrenceCounter():
                     'help': 'pattern to use in identifying words',
                     'default': r'\b(?P<match>{})\b'
                 }
+            ),
+            utils.CLIArg(
+                flags=('--regex'),
+                kwargs={
+                    'help': 'use regex pattern in terms',
+                    'action': 'store_true'
+                }
             )
         ]
     )
@@ -124,14 +131,31 @@ class OccurrenceCounter():
         return tuple(args['terms'])
 
     @staticmethod
-    def process_document(doc, terms, pattern, total_label):
+    def process_document(doc, terms, pattern, total_label, regex):
+
+        def process_regex(term_counts, terms):
+            term_counts_total = {}
+            for t in terms:
+                for k in term_counts.keys():
+                    if re.compile(t).match(k):
+                        try:
+                            term_counts_total[t] += term_counts[k]
+                        except KeyError:
+                            term_counts_total[t] = term_counts[k]
+                if t not in term_counts_total.keys():
+                    term_counts_total[t] = 0
+            return term_counts_total
+
         text = ' '.join(doc.text.split()).lower()
         terms_sorted = sorted(terms, key=len, reverse=True)
         term_pattern = re.compile(pattern.format('|'.join(terms_sorted)))
         term_counts = collections.Counter(
             i.groupdict()['match'] for i in term_pattern.finditer(text)
         )
-        if total_label is not None:
+        # If regex used in terms, aggregate matches together
+        if regex:
+            term_counts = process_regex(term_counts, terms)
+        if total_label:
             return (
                 doc.index
                 + tuple(term_counts[i] for i in terms)
@@ -196,7 +220,8 @@ class EnhancedOccurrenceCounter():
         return tuple(args['terms'])
 
     @staticmethod
-    def process_document(doc, terms, pattern, point_pattern, line_split, total_label):
+    def process_document(doc, terms, pattern,
+                         point_pattern, line_split, total_label):
         terms_sorted = sorted(terms, key=len, reverse=True)
         term_pattern = re.compile(
             pattern.format('|'.join(terms_sorted)), re.IGNORECASE)
@@ -457,9 +482,14 @@ class ConditionalCounter():
         return ('conditionals',)
 
     @staticmethod
+    @check_textblob
     def process_document(doc):
-        return doc.index + (len(ConditionalCounter.pattern.findall(
-                                ' '.join((doc.text).splitlines()))),)
+        sentences = textblob.TextBlob(doc.text).sentences
+        if not sentences:
+            return doc.index + (0,)
+        return doc.index + (
+            len(ConditionalCounter.pattern.findall(
+                ' '.join((doc.text).splitlines()))) / len(sentences),)
 
 
 commands['count_conditionals'] = ConditionalCounter
