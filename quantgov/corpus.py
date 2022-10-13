@@ -221,8 +221,8 @@ class RecursiveDirectoryCorpusDriver(FlatFileCorpusDriver):
 
 class NamePatternCorpusDriver(FlatFileCorpusDriver):
     """
-    Serve a corpus with all files in a single directory and filenames defined
-    by a regular expression.
+    Serve a corpus with filenames defined by a regular expression.
+    Files do NOT need to be in a single directory.
 
     The index labels are, the group names contained in the regular expression
     in the order that they appear
@@ -238,13 +238,20 @@ class NamePatternCorpusDriver(FlatFileCorpusDriver):
             index_labels=index_labels, encoding=encoding, cache=cache)
         self.directory = Path(directory)
 
-    def gen_indices_and_paths(self):
-        subpaths = sorted(i for i in self.directory.iterdir()
+    def _gen_docinfo(self, directory):
+        subpaths = sorted(i for i in directory.iterdir()
                           if not i.name.startswith('.'))
         for subpath in subpaths:
-            match = self.pattern.search(subpath.stem)
-            index = tuple(match.groupdict()[i] for i in self.index_labels)
-            yield index, subpath
+            if subpath.is_dir():
+                yield from self._gen_docinfo(subpath)
+            else:
+                match = self.pattern.search(
+                    str(subpath.relative_to(self.directory)))
+                index = tuple(match.groupdict()[i] for i in self.index_labels)
+                yield index, subpath
+
+    def gen_indices_and_paths(self):
+        return self._gen_docinfo(self.directory)
 
 
 class IndexDriver(FlatFileCorpusDriver):
