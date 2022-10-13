@@ -221,37 +221,6 @@ class RecursiveDirectoryCorpusDriver(FlatFileCorpusDriver):
 
 class NamePatternCorpusDriver(FlatFileCorpusDriver):
     """
-    Serve a corpus with all files in a single directory and filenames defined
-    by a regular expression.
-
-    The index labels are, the group names contained in the regular expression
-    in the order that they appear
-    """
-
-    def __init__(self, pattern, directory, encoding='utf-8', cache=True):
-        self.pattern = re.compile(pattern)
-        index_labels = (
-            i[0] for i in
-            sorted(self.pattern.groupindex.items(), key=lambda x: x[1])
-        )
-        super(NamePatternCorpusDriver, self).__init__(
-            index_labels=index_labels, encoding=encoding, cache=cache)
-        self.directory = Path(directory)
-
-    def gen_indices_and_paths(self):
-        subpaths = sorted(i for i in self.directory.iterdir()
-                          if not i.name.startswith('.'))
-        for subpath in subpaths:
-            print(subpath)
-            print(subpath.stem)
-            print(subpath.relative_to(self.directory))
-            match = self.pattern.search(subpath.stem)
-            index = tuple(match.groupdict()[i] for i in self.index_labels)
-            yield index, subpath
-
-
-class RecursiveNamePatternCorpusDriver(FlatFileCorpusDriver):
-    """
     Serve a corpus with filenames defined by a regular expression.
     Files do NOT need to be in a single directory.
 
@@ -265,7 +234,7 @@ class RecursiveNamePatternCorpusDriver(FlatFileCorpusDriver):
             i[0] for i in
             sorted(self.pattern.groupindex.items(), key=lambda x: x[1])
         )
-        super(RecursiveNamePatternCorpusDriver, self).__init__(
+        super(NamePatternCorpusDriver, self).__init__(
             index_labels=index_labels, encoding=encoding, cache=cache)
         self.directory = Path(directory)
 
