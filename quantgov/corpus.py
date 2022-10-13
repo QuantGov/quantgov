@@ -242,9 +242,47 @@ class NamePatternCorpusDriver(FlatFileCorpusDriver):
         subpaths = sorted(i for i in self.directory.iterdir()
                           if not i.name.startswith('.'))
         for subpath in subpaths:
+            print(subpath)
+            print(subpath.stem)
+            print(subpath.relative_to(self.directory))
             match = self.pattern.search(subpath.stem)
             index = tuple(match.groupdict()[i] for i in self.index_labels)
             yield index, subpath
+
+
+class RecursiveNamePatternCorpusDriver(FlatFileCorpusDriver):
+    """
+    Serve a corpus with filenames defined by a regular expression.
+    Files do NOT need to be in a single directory.
+
+    The index labels are, the group names contained in the regular expression
+    in the order that they appear
+    """
+
+    def __init__(self, pattern, directory, encoding='utf-8', cache=True):
+        self.pattern = re.compile(pattern)
+        index_labels = (
+            i[0] for i in
+            sorted(self.pattern.groupindex.items(), key=lambda x: x[1])
+        )
+        super(RecursiveNamePatternCorpusDriver, self).__init__(
+            index_labels=index_labels, encoding=encoding, cache=cache)
+        self.directory = Path(directory)
+
+    def _gen_docinfo(self, directory):
+        subpaths = sorted(i for i in directory.iterdir()
+                          if not i.name.startswith('.'))
+        for subpath in subpaths:
+            if subpath.is_dir():
+                yield from self._gen_docinfo(subpath)
+            else:
+                match = self.pattern.search(
+                    str(subpath.relative_to(self.directory)))
+                index = tuple(match.groupdict()[i] for i in self.index_labels)
+                yield index, subpath
+
+    def gen_indices_and_paths(self):
+        return self._gen_docinfo(self.directory)
 
 
 class IndexDriver(FlatFileCorpusDriver):
