@@ -3,6 +3,7 @@ quantgov.nlp: Text-based analysis of documents
 """
 import collections
 import math
+import numpy as np
 import re
 
 from decorator import decorator
@@ -37,21 +38,21 @@ commands = {}
 
 @decorator
 def check_nltk(func, *args, **kwargs):
-    if NLTK is None:
+    if not NLTK:
         raise RuntimeError('Must install NLTK to use {}'.format(func))
     return func(*args, **kwargs)
 
 
 @decorator
 def check_textblob(func, *args, **kwargs):
-    if textblob is None:
+    if not textblob:
         raise RuntimeError('Must install textblob to use {}'.format(func))
     return func(*args, **kwargs)
 
 
 @decorator
 def check_textstat(func, *args, **kwargs):
-    if textstat is None:
+    if not textstat:
         raise RuntimeError('Must install teststat to use {}'.format(func))
     return func(*args, **kwargs)
 
@@ -112,6 +113,13 @@ class OccurrenceCounter():
                     'help': 'pattern to use in identifying words',
                     'default': r'\b(?P<match>{})\b'
                 }
+            ),
+            utils.CLIArg(
+                flags=('--regex'),
+                kwargs={
+                    'help': 'use regex pattern in terms',
+                    'action': 'store_true'
+                }
             )
         ]
     )
@@ -123,14 +131,31 @@ class OccurrenceCounter():
         return tuple(args['terms'])
 
     @staticmethod
-    def process_document(doc, terms, pattern, total_label):
+    def process_document(doc, terms, pattern, total_label, regex):
+
+        def process_regex(term_counts, terms):
+            term_counts_total = {}
+            for t in terms:
+                for k in term_counts.keys():
+                    if re.compile(t).match(k):
+                        try:
+                            term_counts_total[t] += term_counts[k]
+                        except KeyError:
+                            term_counts_total[t] = term_counts[k]
+                if t not in term_counts_total.keys():
+                    term_counts_total[t] = 0
+            return term_counts_total
+
         text = ' '.join(doc.text.split()).lower()
         terms_sorted = sorted(terms, key=len, reverse=True)
-        combined_pattern = re.compile(pattern.format('|'.join(terms_sorted)))
+        term_pattern = re.compile(pattern.format('|'.join(terms_sorted)))
         term_counts = collections.Counter(
-            i.groupdict()['match'] for i in combined_pattern.finditer(text)
+            i.groupdict()['match'] for i in term_pattern.finditer(text)
         )
-        if total_label is not None:
+        # If regex used in terms, aggregate matches together
+        if regex:
+            term_counts = process_regex(term_counts, terms)
+        if total_label:
             return (
                 doc.index
                 + tuple(term_counts[i] for i in terms)
@@ -140,6 +165,235 @@ class OccurrenceCounter():
 
 
 commands['count_occurrences'] = OccurrenceCounter
+
+
+class EnhancedOccurrenceCounter():
+
+    cli = utils.CLISpec(
+        help="Term counter, includes bullet points after terms",
+        arguments=[
+            utils.CLIArg(
+                flags=('terms'),
+                kwargs={
+                    'help': 'list of terms to be counted',
+                    'nargs': '+'
+                }
+            ),
+            utils.CLIArg(
+                flags=('--total_label'),
+                kwargs={
+                    'metavar': 'LABEL',
+                    'help': (
+                        'output a column with sum of occurrences of all terms'
+                        ' with column name LABEL'
+                    ),
+                }
+            ),
+            utils.CLIArg(
+                flags=('--pattern'),
+                kwargs={
+                    'help': 'pattern to use in identifying words',
+                    'default': r'\b(?P<match>{})\b'
+                }
+            ),
+            utils.CLIArg(
+                flags=('--point_pattern'),
+                kwargs={
+                    'help': 'pattern to use in identifying bullet points',
+                    'default': r'\(.{1,4}\)|^.\.|;$|\d\d?-\d\d?-\d\d?-\d\d?\.'
+                }
+            ),
+            utils.CLIArg(
+                flags=('--line_split'),
+                kwargs={
+                    'help': 'character on which to split lines',
+                    'default': '\n'
+                }
+            )
+        ]
+    )
+
+    @staticmethod
+    def get_columns(args):
+        if args['total_label'] is not None:
+            return tuple(args['terms']) + (args['total_label'],)
+        return tuple(args['terms'])
+
+    @staticmethod
+    def process_document(doc, terms, pattern,
+                         point_pattern, line_split, total_label):
+        terms_sorted = sorted(terms, key=len, reverse=True)
+        term_pattern = re.compile(
+            pattern.format('|'.join(terms_sorted)), re.IGNORECASE)
+        point_pattern = re.compile(point_pattern)
+        preamble_pattern_multiline = re.compile(r'[:—-]$', re.MULTILINE)
+        preamble_pattern = re.compile(r'[:—-]$')
+        # If no bullet point formatting, run standard analysis
+        if (not point_pattern.search(doc.text)
+                and not preamble_pattern_multiline.search(doc.text)):
+            return OccurrenceCounter.process_document(
+                doc, terms, pattern, total_label)
+
+        def count_line_terms(line):
+            line_term_counts = empty_counter.copy()
+            line_term_counts.update(collections.Counter(
+                i.groupdict()['match'].lower()
+                for i in term_pattern.finditer(line)
+            ))
+            return np.array(list(line_term_counts.values()))
+
+        def count_preamble_terms(line):
+            term_counts = empty_counter.copy()
+            extra_term_counts = empty_counter.copy()
+            preamble = line.split('. ')
+            # More than one sentence and last sentence contains a term
+            if len(preamble) > 1 and term_pattern.findall(preamble[-1]):
+                term_counts.update(collections.Counter([
+                    term_pattern.findall(preamble[-1])[-1].lower()
+                ]))
+                extra_term_counts.update(collections.Counter(
+                    i.lower() for i in term_pattern.findall(line)[:-1]
+                ))
+            # More than one sentence but last sentence contains no terms
+            elif len(preamble) > 1 and not term_pattern.findall(preamble[-1]):
+                extra_term_counts.update(collections.Counter(
+                    i.lower() for i in term_pattern.findall(line)
+                ))
+            # One sentence but more than one term
+            elif len(term_pattern.findall(line)) > 1:
+                term_counts.update(collections.Counter([
+                    term_pattern.findall(line)[-1].lower()
+                ]))
+                extra_term_counts.update(collections.Counter(
+                    i.lower() for i in term_pattern.findall(line)[:-1]
+                ))
+            # One sentence and only one term
+            else:
+                term_counts.update(collections.Counter(
+                    i.groupdict()['match'].lower()
+                    for i in term_pattern.finditer(line)
+                ))
+            return (np.array(list(term_counts.values())),
+                    np.array(list(extra_term_counts.values())))
+
+        def get_format(text, line=False):
+            # (i) (ii) format
+            if re.search(r"^\([ivx]+\)", text):
+                return r"^\([ivx]+\)"
+            # (a) (b) format
+            elif re.search(r"^\([a-z]{1,2}\)", text):
+                return r"^\([a-z]{1,2}\)"
+            # (A) (B) format
+            elif re.search(r"^\([A-Z]{1,2}\)", text):
+                return r"^\([A-Z]{1,2}\)"
+            # (1) (2) format
+            elif re.search(r"^\(\d{1,2}\)", text):
+                return r"^\(\d{1,2}\)"
+            # i. ii. format
+            elif re.search(r"^[ivx]+\.", text):
+                return r"^[ivx]+\."
+            # a. b. format
+            elif re.search(r"^[a-hj-r]{1,2}\.", text):
+                return r"^[a-hj-r]{1,2}\."
+            # A. B. format
+            elif re.search(r"^[A-Z]{1,2}\.", text):
+                return r"^[A-Z]{1,2}\."
+            # 1. 2. format
+            elif re.search(r"^\d{1,2}\.", text):
+                return r"^\d{1,2}\."
+            # none of the above format
+            else:
+                if line:
+                    return ''
+                else:
+                    return (r"^(?!^\([ivx]{1,4}\)|^\([a-hj-r]{1,2}\)|"
+                            r"^\([A-HJ-R]{1,2}\)|^\(\d{1,2}\)|^[ivx]{1,4}|"
+                            r"^[a-hj-r]{1,2}\.|^[A-HJ-R]{1,2}\.|^\d{1,2}\.)")
+
+        empty_counter = collections.Counter()
+        for t in terms:
+            empty_counter.setdefault(t, 0)
+        total_count = np.array([0] * len(terms))
+        preamble_term_counts = []
+        preamble_formatting = []
+        line_count = []
+        line_formatting = ''
+        for line in doc.text.split(line_split):
+            line = line.strip()
+            # Skip empty lines
+            if not line:
+                continue
+            if line_formatting and not re.search(
+                    line_formatting, line, re.MULTILINE):
+                # If no extra lines, count the first line
+                if not line_count:
+                    line_count.append(1)
+                # Multiplies number of keywords found in the preamble
+                # by the number of lines in the list
+                total_count += line_count[-1] * preamble_term_counts[-1]
+                preamble_term_counts.pop()
+                line_count.pop()
+                # Set nested preamble formatting as new line formatting
+                if len(preamble_formatting) > 1:
+                    line_formatting = preamble_formatting.pop()
+                else:
+                    preamble_formatting.pop()
+                    line_formatting = ''
+            # If the line ends in a ":" or "—" and contains keywords,
+            # the line is considered to be a preamble
+            if preamble_pattern.search(line):
+                preamble_terms, extra_term_counts = count_preamble_terms(line)
+                # Add to line count of parent preamble, if nested preamble
+                if preamble_formatting:
+                    if len(line_count) != len(preamble_formatting):
+                        line_count.append(1)
+                    else:
+                        line_count[-1] += 1
+                preamble_term_counts.append(preamble_terms)
+                preamble_formatting.append(get_format(line))
+                total_count += extra_term_counts
+                line_formatting = ''
+                line_count.append(0)
+            # If bullet pount, add to line count
+            # and add any extra terms to total count
+            elif get_format(line, line=True) and preamble_formatting:
+                if not line_formatting:
+                    line_formatting = get_format(line, line=True)
+                line_count[-1] += 1
+                # Only count terms in line if different from preamble
+                if (count_line_terms(line) != preamble_term_counts[-1]).any():
+                    total_count += count_line_terms(line)
+            # For all other lines, add terms to total count
+            else:
+                total_count += count_line_terms(line)
+                # Count preamble terms if not a real list
+                if preamble_formatting and not line_formatting:
+                    total_count += preamble_term_counts[-1]
+                    preamble_term_counts.pop()
+                    if line_count:
+                        line_count.pop()
+                    if len(preamble_formatting) > 1:
+                        line_formatting = preamble_formatting.pop()
+                    else:
+                        preamble_formatting.pop()
+        # If leftover counts, add them
+        while preamble_formatting:
+            if not line_count:
+                line_count.append(1)
+            total_count += line_count[-1] * preamble_term_counts[-1]
+            preamble_formatting.pop()
+            preamble_term_counts.pop()
+            line_count.pop()
+        if total_label:
+            return (
+                doc.index
+                + tuple(total_count)
+                + (sum(total_count),)
+            )
+        return (doc.index + total_count)
+
+
+commands['enhanced_count_occurrences'] = EnhancedOccurrenceCounter
 
 
 class ShannonEntropy():
@@ -228,9 +482,14 @@ class ConditionalCounter():
         return ('conditionals',)
 
     @staticmethod
+    @check_textblob
     def process_document(doc):
-        return doc.index + (len(ConditionalCounter.pattern.findall(
-                                ' '.join((doc.text).splitlines()))),)
+        sentences = textblob.TextBlob(doc.text).sentences
+        if not sentences:
+            return doc.index + (0,)
+        return doc.index + (
+            len(ConditionalCounter.pattern.findall(
+                ' '.join((doc.text).splitlines()))) / len(sentences),)
 
 
 commands['count_conditionals'] = ConditionalCounter

@@ -146,6 +146,16 @@ def test_termcount_multiple_with_label():
                       'cfr,1946,744,122,2812\nmoby,94,285,5,384\n')
 
 
+def test_enhanced_termcount():
+    output = check_output(
+        ['quantgov', 'nlp', 'enhanced_count_occurrences',
+         str(PSEUDO_CORPUS_PATH),
+         'shall', 'must', 'may not', '--total_label', 'allofthem'],
+    )
+    assert output == ('file,shall,must,may not,allofthem\n'
+                      'cfr,1993,768,120,2881\nmoby,94,2447,5,2546\n')
+
+
 def test_shannon_entropy():
     output = check_output(
         ['quantgov', 'nlp', 'shannon_entropy', str(PSEUDO_CORPUS_PATH)],
